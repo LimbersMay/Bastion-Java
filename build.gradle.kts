@@ -71,8 +71,11 @@ dependencies {
 	implementation("net.fabricmc:fabric-language-kotlin:${prop("fabric_kotlin_version")}")
 	implementation("com.geckolib:geckolib-fabric-${prop("minecraft_version")}:${prop("geckolib_version")}")
 
-	// Solo para desarrollar: Spark (perfilador, /spark profiler). No es dependencia del mod.
+	// Solo para desarrollar y medir (no son dependencias del mod): Spark (perfilador, /spark profiler), Lithium
+	// (servidor: movimiento de criaturas, chunks) y Sodium (dibujo, FPS). Lithium y Sodium, como jugará Limbers.
 	localRuntime("maven.modrinth:spark:${prop("spark_version")}")
+	localRuntime("maven.modrinth:lithium:${prop("lithium_version")}")
+	localRuntime("maven.modrinth:sodium:${prop("sodium_version")}")
 
 	// Pruebas de lógica pura (sin Minecraft): src/test/kotlin
 	testImplementation(platform("org.junit:junit-bom:${prop("junit_version")}"))

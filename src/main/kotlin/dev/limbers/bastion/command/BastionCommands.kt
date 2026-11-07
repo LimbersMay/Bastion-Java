@@ -18,7 +18,8 @@ import net.minecraft.network.chat.Component
  *
  * - `/bastion escena escalera`: monta delante del jugador la escena A con escaleras y defensor.
  * - `/bastion escena picar`: la misma escena, sin escaleras: el invasor pica los tablones y pasa al otro lado.
- * - `/bastion escena batalla [por bando]`: la escena C, la batalla grande (200 contra 200 por defecto).
+ * - `/bastion escena batalla [por bando]`: la escena C, la batalla grande (200 contra 200 por defecto), en un llano.
+ * - `/bastion escena batalla-terreno [por bando]`: la misma batalla sobre el terreno tal cual (mapa real).
  * - `/bastion medir [segundos]`: mide ticks/s y ms por tick durante ese tiempo (120 por defecto).
  */
 object BastionCommands {
@@ -31,11 +32,13 @@ object BastionCommands {
 		for (variant in AssaultScene.Variant.entries) {
 			escena.then(Commands.literal(variant.label).executes { buildScene(it, variant) })
 		}
-		escena.then(
-			Commands.literal("batalla")
-				.executes { buildBattle(it, 200) }
-				.then(Commands.argument("porBando", IntegerArgumentType.integer(1, 1000)).executes { buildBattle(it, IntegerArgumentType.getInteger(it, "porBando")) }),
-		)
+		for ((name, onTerrain) in listOf("batalla" to false, "batalla-terreno" to true)) {
+			escena.then(
+				Commands.literal(name)
+					.executes { buildBattle(it, 200, onTerrain) }
+					.then(Commands.argument("porBando", IntegerArgumentType.integer(1, 1000)).executes { buildBattle(it, IntegerArgumentType.getInteger(it, "porBando"), onTerrain) }),
+			)
+		}
 		val medir = Commands.literal("medir")
 			.executes { measure(it, 120) }
 			.then(Commands.argument("segundos", IntegerArgumentType.integer(5, 1800)).executes { measure(it, IntegerArgumentType.getInteger(it, "segundos")) })
@@ -54,12 +57,12 @@ object BastionCommands {
 	private fun placement(source: CommandSourceStack): Pair<BlockPos, Direction> =
 		BlockPos.containing(source.position) to Direction.fromYRot(source.rotation.y.toDouble())
 
-	private fun buildBattle(context: CommandContext<CommandSourceStack>, perSide: Int): Int {
+	private fun buildBattle(context: CommandContext<CommandSourceStack>, perSide: Int, onTerrain: Boolean): Int {
 		val source = context.source
 		val (at, facing) = placement(source)
 		// El llano empieza 3 bloques por delante, centrado en quien lo pide a lo ancho.
 		val origin = at.relative(facing, 3 - BattleScene.F_MIN).relative(facing.counterClockWise, 24).below()
-		val battle = BattleScene(source.level, origin, facing).build(perSide)
+		val battle = BattleScene(source.level, origin, facing).build(perSide, onTerrain)
 		source.sendSuccess({
 			Component.literal("Escena C (batalla): ${battle.invaders.size} invasores contra ${battle.defenders.size} defensores. " +
 				"Mide con /bastion medir y /spark profiler start --timeout 120.")

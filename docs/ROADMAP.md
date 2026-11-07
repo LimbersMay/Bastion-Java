@@ -38,7 +38,26 @@ Limbers en un mapa real, el desglose de Spark y la escena B (barco).*
     media mal (el primer tick se medía desde cero, ya corregido); su p95, 13,5 ms, sí vale.
   - **FPS en el PC de Limbers** (2026-11-07, cliente de desarrollo sin Sodium ni EntityCulling, mirando la batalla
     desde encima de la puerta): 150-200 en reposo, **80-90 en plena pelea**. Jugable; con Sodium debería subir.
-  - **Falta:** el desglose por método de Spark (`/spark profiler` sube el informe a
+  - **Sobre terreno real** (2026-11-07, `/bastion escena batalla-terreno`, mundo normal con semilla `bastion`,
+    servidor en `execute positioned 39 67 51 rotated -90 0`, colinas y árboles, sin aplanar; Limbers conectado mirando;
+    medido con `/bastion medir 60` y Spark durante la pelea entera):
+
+    | Configuración | Ticks/s | ms por tick (media / p95 / peor) | Movimiento de criaturas | Chunks | Nuestro código |
+    |---|---|---|---|---|---|
+    | Llano, sin Lithium (Spark en plena pelea) | 20,0 | ~12 / 17 / 30 | — | — | — |
+    | Terreno real, sin Lithium ([informe](https://spark.lucko.me/GmezQ3APPn)) | 20,0 | 23,3 / 37,6 / 102 | 25 % del tick | 28 % | 2,4 % |
+    | Terreno real, con Lithium ([informe](https://spark.lucko.me/e3RQfad7dd)) | 20,0 | **14,4 / 24,2 / 71** | 13 % | 35 % | 3,1 % |
+
+    - Con Lithium el tick baja un 40 %. Ojo: en la primera medida el mundo era nuevo y aún generaba terreno; en la de
+      Lithium ya estaba generado. Parte de la mejora puede venir de ahí.
+    - **El peor tick sigue por encima de 50 ms** (71 ms): picos sueltos, probablemente de chunks (guardado o carga).
+      El p95 está muy por debajo. A vigilar en el mapa del castillo.
+    - Lo que pesa es del juego (mover y chocar 400 criaturas con el terreno, los chunks), no nuestro (2-3 %).
+    - La meta del campo de flujo era una fila; en terreno real cayó en la orilla de un lago y quedó aislada (32
+      casillas). Ahora es toda la franja de los defensores. El agua sigue sin cruzarse (llegará con la escena B).
+    - Lithium (servidor) y Sodium (cliente, beta para 26.3) van en el entorno de desarrollo (`localRuntime`).
+  - **Falta:** los FPS de Limbers con Sodium; el mapa real del castillo (convertir Stonehill u Old Fallen Castle con
+    Chunker: hace falta que Limbers descargue el `.mcworld` de mcpedl); el desglose por método de Spark (`/spark profiler` sube el informe a
     spark.lucko.me: preguntar a Limbers antes de usarlo, o guardarlo en archivo); medir con Lithium; y una batalla más
     larga o con más unidades para ver dónde está el techo.
   - GameTest nueva `campoDeFlujo`: 10 invasores cruzan la puerta siguiendo el campo en ~4,7 s, 5 de 5.

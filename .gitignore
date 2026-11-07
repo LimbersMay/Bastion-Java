@@ -26,3 +26,6 @@ Thumbs.db
 # Secretos (nunca al repositorio)
 .env*
 .claude.json
+
+# Mundos y mapas de terceros (Stonehill, Old Fallen Castle...): sin licencia para redistribuirlos
+*.mcworld

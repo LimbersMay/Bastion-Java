@@ -5,7 +5,53 @@ sesión, actualiza «Dónde nos quedamos».
 
 ## Dónde nos quedamos
 
-*Última actualización: 2026-11-07 (segunda sesión). Proyecto creado y compilando; sin IA todavía.*
+*Última actualización: 2026-11-07 (segunda sesión). Escena A hecha: el invasor pica y pone sus escaleras él mismo;
+GameTest 5 de 5. Falta que Limbers dé su opinión de cómo se siente, y las escenas C y B.*
+
+- **Escena A de la prueba inicial, hecha (2026-11-07).** Rama `feature/prueba-inicial`.
+  - **Buscador de rutas:** `routeLogic.ts` de Bedrock traducido a Kotlin (`logic/route/RoutePlanner.kt`), con sus
+    25 pruebas JUnit (de `routeLogic.test.ts` y `ladderRoute.test.ts`), que pasan todas. Lee el mundo con
+    `LevelCells`, que usa las propiedades reales del bloque (forma de colisión, dureza, si tiene inventario) en vez
+    de los nombres. El coste de picar es el tiempo real de picar con su herramienta (`Digging`).
+  - **Unidades:** `Invader` (hacha, escaleras que se gastan) y `Defender` (espada, con puesto fijo), con la ficha
+    de Bedrock y las skins de soldado de Bedrock sobre el modelo de jugador del juego.
+  - **`AssaultGoal`:** el invasor ejecuta su ruta él mismo. Camina con la navegación del juego. Pica con golpes,
+    grieta por fases, partículas y sonido, y tarda lo mismo que un jugador con esa herramienta (decisión de
+    Limbers: tablón con hacha de hierro en 0,5 s; con espada, más lento; piedra con pico, rápido). Pone la escalera tramo a tramo con la escalera en la mano, sube
+    empujando contra la pared (la mecánica del juego) y golpea desde ella si tiene a su enemigo a tiro. Si le
+    rompen la escalera, cae y vuelve a planear desde el suelo. Ningún teletransporte ni bloque puesto por el juego.
+  - **Escena montable en el juego:** `/bastion escena escalera` y `/bastion escena picar` montan delante del
+    jugador un patio cerrado con muros de 8 de alto (para que no se pueda rodear), la franja de tablones, el
+    invasor y, en la de escalera, el defensor arriba. Limbers la vio en su PC el 2026-11-07 (12 escenas montadas).
+  - **Medido** (2026-11-07, mod 0.0.1, Minecraft 26.3, GameTest con `tools/gametest-5.sh`, 5 pasadas):
+
+    | Prueba | Criterio | Resultado (5 de 5) |
+    |---|---|---|
+    | `asaltoConEscalera` | Arriba en ≤ 30 s y el defensor herido | Arriba en 13,3-13,9 s, 8 tramos, defensor con 38 de 60 |
+    | `asaltoPicando` | Al otro lado en ≤ 40 s | 7,4 s, 4 tablones picados (con tiempos del juego; 11,4 s con ×3) |
+    | `escaleraDerribada` | Cae, sin flotar ni teletransporte | En el suelo 13 ticks después de romperla |
+    | Sin trampas | Ningún salto de más de 1,5 bloques por tick | Cumplido en todas |
+
+  - **Lo que costó**, para la próxima:
+    - El juego deja a una criatura con objetivo y mucha vida tirarse desde muy alto (con 60 de vida, 43 bloques):
+      el defensor saltaba del muro. `SiegeUnit.getMaxFallDistance` = 3.
+    - Una escalera colocada con el invasor pegado a la pared le queda dentro del cuerpo y el tramo de encima le hace
+      de techo. Antes de colocar, se centra en la casilla.
+    - Trepando, si empuja hacia un punto cercano, en el aire oscila de lado a lado hasta salirse: empuja hacia un
+      punto lejano dentro del muro (`PUSH_AHEAD`).
+    - El defensor, sin puesto, perseguía al invasor por lo alto de los muros: ahora defiende su puesto
+      (`GuardPostGoals`, idea de `postLogic`).
+    - **El lanzador de GameTest de Fabric no repite las pruebas** aunque la anotación diga `maxAttempts = 5,
+      requiredSuccesses = 5`. Para el «5 de 5»: `tools/gametest-5.sh`.
+  - **Para verlas:** `./gradlew runClient`, mundo creativo con trucos y `/bastion escena ...`. También
+    `./gradlew runClientPruebas` (el juego con las GameTest cargadas, para `/test run ...`), **sin probar todavía**.
+  - **Visto por Limbers (2026-11-07), sin programarlo:** en la escena de escalera, el invasor golpeó al defensor
+    arriba y los dos cayeron al patio del otro lado. El invasor volvió a planear desde allí, **picó la pared** para
+    llegar hasta el defensor y lo mató. Es la prueba de que planear y actuar por sí mismo da comportamientos que en
+    Bedrock habrían pedido parches.
+  - **Decidido por Limbers (2026-11-07):** picar con los tiempos del juego, como un jugador; y que el defensor
+    pueda tirar al invasor de la escalera se queda.
+  - Las skins de Bedrock no tienen licencia de reutilización: valen para desarrollar, no para publicar.
 
 - **Proyecto creado (2026-11-07)** a partir de la plantilla oficial de Fabric para 26.3, en Kotlin (Gradle con
   `build.gradle.kts`). Paquete `dev.limbers.bastion`, id `bastion`.
@@ -30,7 +76,7 @@ sesión, actualiza «Dónde nos quedamos».
     [POR-QUE-JAVA.md](POR-QUE-JAVA.md).
 - **Stack elegido:** Fabric + Kotlin + GeckoLib + GameTest + Spark, más Lithium, Sodium y EntityCulling para jugar.
   Ver [STACK.md](STACK.md).
-- **Proyecto de Bedrock:** `../Bastion`, versión 0.1.55, rama `feature/old-fallen-castle`. Queda como referencia.
+- **Proyecto de Bedrock:** `../Bastion` (en el PC de Arch, `../../addons/Bastion`), versión 0.1.55, rama `feature/old-fallen-castle`. Queda como referencia.
   - Tiene **pendiente el commit de su Fase 3** (v0.1.44-0.1.55) cuando Limbers dé el OK.
   - En su v0.1.55 `reselect_targets` vuelve a estar puesto, así que la batalla grande va lenta (2-4 ticks/s), pero
     todo lo demás funciona como antes.
@@ -38,7 +84,8 @@ sesión, actualiza «Dónde nos quedamos».
   1. ~~Elegir y fijar versiones.~~ Hecho: 26.3.
   2. ~~Crear el proyecto con la plantilla oficial de Fabric en Kotlin.~~ Hecho: `build`, `runServer`,
      `runClient` y la GameTest vacía funcionan.
-  3. Escena A: el invasor que coloca su escalera y pica con grieta, con sus GameTest.
+  3. ~~Escena A: el invasor que coloca su escalera y pica con grieta, con sus GameTest.~~ Hecha; falta la opinión
+     de Limbers.
   4. Escena C: 400 unidades con campo de flujo, medidas con Spark.
   5. Escena B: el barco, si da tiempo.
 
@@ -70,7 +117,8 @@ Criterios y escenas en [PRUEBA-INICIAL.md](PRUEBA-INICIAL.md).
 
 - [x] Versiones elegidas y fijadas (26.3, 2026-11-07).
 - [x] Proyecto creado; `build`, `runClient`, `runServer` y una GameTest vacía funcionan (2026-11-07).
-- [ ] Escena A: escalera colocada por el invasor, picar con grieta, escalera derribada. GameTest 5 de 5.
+- [x] Escena A: escalera colocada por el invasor, picar con grieta, escalera derribada. GameTest 5 de 5
+      (2026-11-07). Falta que Limbers diga si se siente real.
 - [ ] Escena C: 400 unidades, campo de flujo, rejilla; medido con Spark (ticks/s, ms por tick, desglose) y FPS en el
       PC de Limbers.
 - [ ] Escena B: cruce en barco.
@@ -118,6 +166,8 @@ Lo que en Bedrock era su Fase 3, que allí quedó sin cerrar.
   ellas. Si no hay otra salida que hacer trampa, se pregunta.
 - **Plataforma de juego:** PC con Arch Linux. La tablet ya no es objetivo.
 - **Minecraft 26.3 (2026-11-07):** es la que Limbers tiene instalada y todo el stack tiene versión para ella.
+- **Buscador de rutas: el de Bedrock portado, por tramos (2026-11-07).** Los tramos a pie van con la navegación
+  del juego; picar y escaleras, con `AssaultGoal`. Funcionó en la escena A.
 - **Paquete `dev.limbers.bastion`, id `bastion`** (la propuesta de la fase 0), y Gradle en Kotlin
   (`build.gradle.kts`).
 - **Las reglas de juego de Bedrock se mantienen** salvo que Limbers diga otra cosa: ver
@@ -125,7 +175,5 @@ Lo que en Bedrock era su Fase 3, que allí quedó sin cerrar.
 
 ## Decisiones abiertas
 
-- **Buscador de rutas:** ampliar el del juego (`NodeEvaluator` propio) o portar el de Bedrock y usarlo por tramos.
-  Recomendación: portar el de Bedrock (ver [ARQUITECTURA.md](ARQUITECTURA.md)).
 - **Barcos:** barco del juego dirigido por Mixin, o entidad balsa propia de varias plazas.
 - **Modelos:** cuándo pasar del modelo humanoide del juego a modelos propios con GeckoLib.

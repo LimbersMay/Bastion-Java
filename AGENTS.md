@@ -49,6 +49,7 @@ atribución a Claude, nunca commit en `main` ni con `git add -A` o `git add .`, 
 
 ## Referencias
 
-- Proyecto de Bedrock: `../Bastion` (solo lectura salvo que Limbers pida algo allí).
+- Proyecto de Bedrock: `../Bastion` (solo lectura salvo que Limbers pida algo allí). En el PC de Arch de Limbers
+  está en `../../addons/Bastion` (`~/Documents/sideProjects/Minecraft/addons/Bastion`).
 - Lo aprendido en Bedrock: `../Bastion/docs/IA.md`. Investigación de rutas y escalada:
   `../Bastion/docs/refs/rutas-y-escalada.md`.

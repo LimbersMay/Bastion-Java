@@ -34,7 +34,7 @@ loom {
 
 fabricApi {
 	// GameTest: pruebas dentro del juego, en su propio source set (src/gametest) con su fabric.mod.json.
-	// Tareas: runGameTest (servidor, sin pantalla) y runClientGameTest (cliente).
+	// Tarea: runGameTest (servidor sin pantalla, acelerado). Para verlas en vivo, runClientPruebas (más abajo).
 	configureTests {
 		createSourceSet = true
 		modId = "bastion-gametest"
@@ -42,6 +42,19 @@ fabricApi {
 		enableClientGameTests = false
 		// Acepta el EULA de Minecraft para el servidor de pruebas: https://aka.ms/MinecraftEULA
 		eula = true
+	}
+}
+
+// Va después de `fabricApi`, que es quien crea el source set «gametest».
+loom {
+	runs {
+		// El juego con las GameTest cargadas, para verlas en vivo: `./gradlew runClientPruebas`, entrar en un mundo
+		// y `/test run bastion-gametest:<prueba>` (o `/test runall`).
+		register("clientPruebas") {
+			client()
+			displayName = "Minecraft Client (con pruebas)"
+			sourceSet = "gametest"
+		}
 	}
 }
 

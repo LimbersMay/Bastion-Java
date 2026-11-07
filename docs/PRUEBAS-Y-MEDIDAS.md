@@ -39,6 +39,14 @@ pasó o falló. Es el sustituto del laboratorio de Bedrock, pero repetible y aut
 **Regla:** una prueba de comportamiento se ejecuta varias veces (por ejemplo 5) y se exige que pase todas. Una sola
 pasada engaña: en Bedrock, una prueba contaminada dio por bueno un arreglo que no funcionaba.
 
+- **Cómo (26.3):** `tools/gametest-5.sh` lanza `runGameTest` 5 veces y falla si una sola pasada falla. El lanzador
+  de Fabric no repite aunque la anotación diga `maxAttempts = 5, requiredSuccesses = 5` (se deja puesta: documenta
+  la intención y vale para `/test` dentro del juego).
+- Cada prueba superada escribe `[bastion] Prueba <nombre>: bien en N ticks (...)`. Los registros de las 5 pasadas
+  quedan en `build/gametest-runs/`.
+- **La misma escena se monta en el juego** con `/bastion escena <variante>` (código compartido en
+  `scene/AssaultScene.kt`): así Limbers ve a velocidad normal lo que la GameTest mide acelerado.
+
 ## 3. Partidas en el servidor de desarrollo
 
 - `./gradlew runServer`, con un mundo de mapa convertido en `run/`.

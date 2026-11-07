@@ -1,5 +1,7 @@
 package dev.limbers.bastion
 
+import dev.limbers.bastion.command.BastionCommands
+import dev.limbers.bastion.entity.BastionEntities
 import net.fabricmc.api.ModInitializer
 import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
@@ -12,6 +14,8 @@ object Bastion : ModInitializer {
 	val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
 	override fun onInitialize() {
+		BastionEntities.initialize()
+		BastionCommands.register()
 		LOGGER.info("[bastion] Cargado")
 	}
 

@@ -88,6 +88,8 @@ class AssaultGoal(private val unit: Invader) : Goal() {
 	}
 
 	override fun canUse(): Boolean {
+		// En una batalla grande no planea rutas propias: sigue el campo de flujo (FlowFieldGoal).
+		if (unit.battle != null) return false
 		val goal = goal() ?: return false
 		return !arrived(goal)
 	}

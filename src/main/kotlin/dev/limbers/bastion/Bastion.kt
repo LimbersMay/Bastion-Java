@@ -1,5 +1,7 @@
 package dev.limbers.bastion
 
+import dev.limbers.bastion.battle.BattleDirector
+import dev.limbers.bastion.battle.Bench
 import dev.limbers.bastion.command.BastionCommands
 import dev.limbers.bastion.entity.BastionEntities
 import net.fabricmc.api.ModInitializer
@@ -16,6 +18,8 @@ object Bastion : ModInitializer {
 	override fun onInitialize() {
 		BastionEntities.initialize()
 		BastionCommands.register()
+		BattleDirector.register()
+		Bench.register()
 		LOGGER.info("[bastion] Cargado")
 	}
 

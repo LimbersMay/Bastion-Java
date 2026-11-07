@@ -13,14 +13,15 @@ import java.util.EnumSet
 
 /** Ataque cuerpo a cuerpo solo contra quien esté a `radius` bloques del puesto. */
 class GuardPostMeleeGoal(
-	private val mob: PathfinderMob,
+	private val guard: PathfinderMob,
 	private val post: () -> BlockPos?,
-	private val radius: Double,
-) : MeleeAttackGoal(mob, 1.0, true) {
+	private val radius: () -> Double,
+) : MeleeAttackGoal(guard, 1.0, true) {
 	private fun targetNearPost(): Boolean {
 		val p = post() ?: return true
-		val target = mob.target ?: return false
-		return target.distanceToSqr(p.x + 0.5, p.y.toDouble(), p.z + 0.5) <= radius * radius
+		val target = guard.target ?: return false
+		val r = radius()
+		return target.distanceToSqr(p.x + 0.5, p.y.toDouble(), p.z + 0.5) <= r * r
 	}
 
 	override fun canUse(): Boolean = targetNearPost() && super.canUse()

@@ -13,6 +13,12 @@ fun prop(name: String): String = providers.gradleProperty(name).get()
 
 repositories {
 	// GeckoLib (modelos y animaciones)
+	// Mods de Modrinth (Spark, para medir)
+	maven {
+		name = "Modrinth"
+		url = uri("https://api.modrinth.com/maven")
+		content { includeGroup("maven.modrinth") }
+	}
 	maven {
 		name = "GeckoLib"
 		url = uri("https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/")
@@ -64,6 +70,9 @@ dependencies {
 	implementation("net.fabricmc.fabric-api:fabric-api:${prop("fabric_api_version")}")
 	implementation("net.fabricmc:fabric-language-kotlin:${prop("fabric_kotlin_version")}")
 	implementation("com.geckolib:geckolib-fabric-${prop("minecraft_version")}:${prop("geckolib_version")}")
+
+	// Solo para desarrollar: Spark (perfilador, /spark profiler). No es dependencia del mod.
+	localRuntime("maven.modrinth:spark:${prop("spark_version")}")
 
 	// Pruebas de lógica pura (sin Minecraft): src/test/kotlin
 	testImplementation(platform("org.junit:junit-bom:${prop("junit_version")}"))

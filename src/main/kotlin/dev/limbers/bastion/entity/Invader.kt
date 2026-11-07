@@ -1,6 +1,7 @@
 package dev.limbers.bastion.entity
 
 import dev.limbers.bastion.entity.ai.AssaultGoal
+import dev.limbers.bastion.entity.ai.FlowFieldGoal
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier
@@ -19,7 +20,8 @@ import net.minecraft.world.phys.Vec3
  * Soldado invasor (ficha de Bedrock: 40 de vida, golpe 9, velocidad 0,28, hacha de hierro).
  *
  * Lleva su hacha y, si se le dan, escaleras de mano. Con `AssaultGoal` va hacia su objetivo por la ruta que él
- * mismo planea: camina, pica o pone escaleras, con su hacha o sus escaleras en la mano.
+ * mismo planea: camina, pica o pone escaleras, con su hacha o sus escaleras en la mano. En una batalla grande sigue
+ * el campo de flujo de la batalla (`FlowFieldGoal`) y pelea con quien le asigne el director.
  */
 class Invader(type: EntityType<out Invader>, level: Level) : SiegeUnit(type, level, SKINS) {
 	/** El arma, guardada mientras lleva una escalera en la mano. */
@@ -47,9 +49,13 @@ class Invader(type: EntityType<out Invader>, level: Level) : SiegeUnit(type, lev
 		goalSelector.addGoal(0, FloatGoal(this))
 		goalSelector.addGoal(1, AssaultGoal(this))
 		goalSelector.addGoal(2, MeleeAttackGoal(this, 1.0, true))
+		goalSelector.addGoal(3, FlowFieldGoal(this))
 		goalSelector.addGoal(8, RandomLookAroundGoal(this))
 		targetSelector.addGoal(1, HurtByTargetGoal(this))
-		targetSelector.addGoal(2, NearestAttackableTargetGoal(this, Defender::class.java, false))
+		// En una batalla el enemigo lo asigna el director; fuera de ella, lo busca él.
+		targetSelector.addGoal(2, object : NearestAttackableTargetGoal<Defender>(this, Defender::class.java, false) {
+			override fun canUse() = battle == null && super.canUse()
+		})
 	}
 
 	companion object {

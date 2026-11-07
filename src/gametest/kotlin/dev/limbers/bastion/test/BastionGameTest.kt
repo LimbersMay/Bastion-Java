@@ -1,12 +1,22 @@
 package dev.limbers.bastion.test
 
 import dev.limbers.bastion.Bastion
+import dev.limbers.bastion.battle.Battle
+import dev.limbers.bastion.battle.BattleDirector
+import dev.limbers.bastion.entity.BastionEntities
 import dev.limbers.bastion.entity.Invader
+import dev.limbers.bastion.logic.flow.Box
+import dev.limbers.bastion.logic.flow.FlowField
+import dev.limbers.bastion.logic.route.Cell
+import dev.limbers.bastion.world.LevelCells
 import dev.limbers.bastion.scene.AssaultScene
 import net.fabricmc.fabric.api.gametest.v1.GameTest
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.gametest.framework.GameTestHelper
+import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.LadderBlock
 import net.minecraft.world.phys.Vec3
@@ -97,6 +107,37 @@ class BastionGameTest {
 			helper.assertTrue(brokenAt >= 0, "aún no se ha roto la escalera")
 			helper.assertTrue(invader.onGround() && invader.y < floorY + 0.5, "no ha caído al suelo")
 			report(helper, "escaleraDerribada", "rota en el tick $brokenAt, en el suelo ${helper.tick - brokenAt} ticks después")
+		}
+	}
+
+	/**
+	 * Escena C en pequeño: 10 invasores de una batalla siguen el campo de flujo y cruzan la puerta de un muro, sin
+	 * calcular rutas propias, en 30 s o menos.
+	 */
+	@GameTest(structure = ARENA, maxTicks = 600)
+	fun campoDeFlujo(helper: GameTestHelper) {
+		val level = helper.level
+		val origin = helper.absolutePos(BlockPos(0, 0, 0))
+		fun p(x: Int, y: Int, z: Int) = origin.offset(x, y, z)
+		for (x in 0..22) for (z in 0..10) {
+			level.setBlock(p(x, 0, z), Blocks.STONE.defaultBlockState(), 2)
+			for (y in 1..4) level.setBlock(p(x, y, z), if (x == 12 && z !in 4..5) Blocks.STONE_BRICKS.defaultBlockState() else Blocks.AIR.defaultBlockState(), 2)
+		}
+		val a = p(0, 1, 0)
+		val b = p(22, 3, 10)
+		val box = Box(a.x, a.y, a.z, b.x, b.y, b.z)
+		val goals = (0..10).map { z -> p(20, 1, z).let { Cell(it.x, it.y, it.z) } }
+		val flow = FlowField.compute(box, goals, LevelCells(level, ItemStack(Items.IRON_AXE)))
+		val battle = Battle(level, flow)
+		val invaders = (0 until 10).map { i ->
+			BastionEntities.INVADER.spawn(level, p(2 + i % 2, 1, i), EntitySpawnReason.COMMAND)!!.also { battle.add(it) }
+		}
+		BattleDirector.start(battle)
+		invaders.forEach { watchNoTeleport(helper, it) }
+		helper.succeedWhen {
+			val behind = invaders.count { it.x >= origin.x + 14 }
+			helper.assertTrue(behind == invaders.size, "solo $behind de ${invaders.size} han cruzado la puerta")
+			report(helper, "campoDeFlujo", "${invaders.size} invasores al otro lado del muro")
 		}
 	}
 

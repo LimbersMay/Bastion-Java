@@ -25,18 +25,24 @@ class Defender(type: EntityType<out Defender>, level: Level) : SiegeUnit(type, l
 	/** Su puesto: pelea con quien llegue a él y vuelve a él. Nulo: pelea donde sea. */
 	var post: BlockPos? = null
 
+	/** Hasta dónde del puesto sale a pelear. */
+	var postRadius: Double = POST_RADIUS
+
 	init {
 		setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.IRON_SWORD))
 	}
 
 	override fun registerGoals() {
 		goalSelector.addGoal(0, FloatGoal(this))
-		goalSelector.addGoal(2, GuardPostMeleeGoal(this, { post }, POST_RADIUS))
+		goalSelector.addGoal(2, GuardPostMeleeGoal(this, { post }) { postRadius })
 		goalSelector.addGoal(3, ReturnToPostGoal(this) { post })
 		goalSelector.addGoal(7, LookAtPlayerGoal(this, Player::class.java, 8f))
 		goalSelector.addGoal(8, RandomLookAroundGoal(this))
 		targetSelector.addGoal(1, HurtByTargetGoal(this))
-		targetSelector.addGoal(2, NearestAttackableTargetGoal(this, Invader::class.java, false))
+		// En una batalla el enemigo lo asigna el director; fuera de ella, lo busca él.
+		targetSelector.addGoal(2, object : NearestAttackableTargetGoal<Invader>(this, Invader::class.java, false) {
+			override fun canUse() = battle == null && super.canUse()
+		})
 	}
 
 	companion object {

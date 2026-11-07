@@ -5,8 +5,43 @@ sesión, actualiza «Dónde nos quedamos».
 
 ## Dónde nos quedamos
 
-*Última actualización: 2026-11-07 (segunda sesión). Escena A hecha: el invasor pica y pone sus escaleras él mismo;
-GameTest 5 de 5. Falta que Limbers dé su opinión de cómo se siente, y las escenas C y B.*
+*Última actualización: 2026-11-07 (segunda sesión). Escenas A y C hechas. A: el invasor pica y pone sus escaleras él
+mismo (commit `ea3377a`). C: 200 contra 200 a 20 ticks/s, con campo de flujo y rejilla. Falta: los FPS en el PC de
+Limbers en un mapa real, el desglose de Spark y la escena B (barco).*
+
+- **Escena C de la prueba inicial, hecha (2026-11-07).** Rama `feature/prueba-inicial`, sin commit todavía.
+  - **Lógica pura con pruebas:** `logic/flow/FlowField.kt` (campo de flujo: Dijkstra al revés desde la meta, andar,
+    subir un escalón, caer hasta 3; 7 pruebas) y `logic/flow/SpatialGrid.kt` (rejilla de 8 bloques para el enemigo
+    más cercano; 5 pruebas).
+  - **`battle/Battle.kt`:** la batalla y su director. Cada tick rellena las rejillas y asigna enemigo a una décima
+    parte de las unidades (cada una revisa su objetivo cada 10 ticks, a 16 bloques). Las unidades de una batalla no
+    usan el `NearestAttackableTargetGoal` del juego ni planean rutas propias (`AssaultGoal` se desactiva): los
+    invasores siguen el campo (`FlowFieldGoal`) y pelean con `MeleeAttackGoal`; los defensores guardan su puesto
+    (radio 14).
+  - **`/bastion escena batalla [por bando]`** monta un llano de 111x52 con un muro y una puerta de 6, 200 invasores y
+    200 defensores. **`/bastion medir [segundos]`** escribe ticks/s y ms por tick en `run/bastion-bench.txt`.
+    Spark va en el entorno de desarrollo (`localRuntime`).
+  - **Medido** (2026-11-07, mod 0.0.1, MC 26.3, servidor de desarrollo `runServer` en el PC de Limbers (8 hilos,
+    35 GB), JDK 27, sin Lithium; Limbers conectado mirando la batalla; mundo plano; `/spark tps` en plena pelea, con
+    las 400 unidades vivas):
+
+    | Medida | Resultado | Bedrock (misma batalla de ~400) |
+    |---|---|---|
+    | Ticks/s | **20,0** estables | 7,5 (v0.1.24); 2-4 (v0.1.55) |
+    | ms por tick (mín/mediana/p95/máx, 10 s) | 8,5 / 11,1 / 16,5 / 30,3 y 8,3 / 12,1 / 17,2 / 18,6 | — |
+    | Campo de flujo (5.680 casillas) | 9-71 ms, una vez por batalla | — |
+    | Pico al montar la escena (400 entidades y ~45.000 bloques) | 87 ms, una vez | — |
+
+    El criterio era 20 ticks/s con el peor tick por debajo de 50 ms: **cumplido**. La batalla dura unos 45 s (mueren
+    los 200 invasores; quedan 68-88 defensores), así que la medida de 2 minutos de `/bastion medir` incluye mucho rato
+    de calma: lo representativo es la de Spark en plena pelea. La primera línea de `bastion-bench.txt` tiene la
+    media mal (el primer tick se medía desde cero, ya corregido); su p95, 13,5 ms, sí vale.
+  - **FPS en el PC de Limbers** (2026-11-07, cliente de desarrollo sin Sodium ni EntityCulling, mirando la batalla
+    desde encima de la puerta): 150-200 en reposo, **80-90 en plena pelea**. Jugable; con Sodium debería subir.
+  - **Falta:** el desglose por método de Spark (`/spark profiler` sube el informe a
+    spark.lucko.me: preguntar a Limbers antes de usarlo, o guardarlo en archivo); medir con Lithium; y una batalla más
+    larga o con más unidades para ver dónde está el techo.
+  - GameTest nueva `campoDeFlujo`: 10 invasores cruzan la puerta siguiendo el campo en ~4,7 s, 5 de 5.
 
 - **Escena A de la prueba inicial, hecha (2026-11-07).** Rama `feature/prueba-inicial`.
   - **Buscador de rutas:** `routeLogic.ts` de Bedrock traducido a Kotlin (`logic/route/RoutePlanner.kt`), con sus
@@ -86,7 +121,7 @@ GameTest 5 de 5. Falta que Limbers dé su opinión de cómo se siente, y las esc
      `runClient` y la GameTest vacía funcionan.
   3. ~~Escena A: el invasor que coloca su escalera y pica con grieta, con sus GameTest.~~ Hecha; falta la opinión
      de Limbers.
-  4. Escena C: 400 unidades con campo de flujo, medidas con Spark.
+  4. ~~Escena C: 400 unidades con campo de flujo, medidas con Spark.~~ Hecha: 20 ticks/s; faltan FPS y desglose.
   5. Escena B: el barco, si da tiempo.
 
 ## Versiones fijadas
@@ -119,8 +154,8 @@ Criterios y escenas en [PRUEBA-INICIAL.md](PRUEBA-INICIAL.md).
 - [x] Proyecto creado; `build`, `runClient`, `runServer` y una GameTest vacía funcionan (2026-11-07).
 - [x] Escena A: escalera colocada por el invasor, picar con grieta, escalera derribada. GameTest 5 de 5
       (2026-11-07). Falta que Limbers diga si se siente real.
-- [ ] Escena C: 400 unidades, campo de flujo, rejilla; medido con Spark (ticks/s, ms por tick, desglose) y FPS en el
-      PC de Limbers.
+- [x] Escena C: 400 unidades, campo de flujo, rejilla; medido (ticks/s y ms por tick, 2026-11-07). Faltan el
+      desglose de Spark y los FPS en el PC de Limbers.
 - [ ] Escena B: cruce en barco.
 - [ ] Limbers lo ve en su PC y decide si se sigue.
 

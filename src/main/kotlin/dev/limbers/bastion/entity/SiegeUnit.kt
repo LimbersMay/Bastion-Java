@@ -1,5 +1,6 @@
 package dev.limbers.bastion.entity
 
+import dev.limbers.bastion.battle.Battle
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
@@ -18,6 +19,9 @@ abstract class SiegeUnit(type: EntityType<out SiegeUnit>, level: Level, private 
 		if (!level.isClientSide) entityData.set(SKIN, random.nextInt(skinCount))
 		setPersistenceRequired()
 	}
+
+	/** La batalla en la que pelea, si la hay: entonces el director le asigna enemigo y sigue su campo de flujo. */
+	var battle: Battle? = null
 
 	/** Índice de la skin, para el cliente. */
 	val skin: Int get() = entityData.get(SKIN)

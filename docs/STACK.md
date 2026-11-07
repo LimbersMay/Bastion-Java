@@ -42,7 +42,12 @@ Estado a **2026-11-07**, según la documentación de Fabric y las páginas de lo
   `succeed()`; en las antiguas usaban `TestContext` y `complete()`. Copia ejemplos solo de la documentación de la
   versión fijada.
 
-**Cómo elegir al empezar la prueba inicial:** la versión más nueva en la que existan a la vez Fabric API,
+**Elegida (2026-11-07): la 26.3.** Para entonces ya existían la 26.3 estable y snapshots de la 26.4, y todas las
+piezas tenían versión para la 26.3. Las versiones exactas están en `gradle.properties` y en
+[ROADMAP.md](ROADMAP.md). Gradle y el juego de desarrollo funcionan con el JDK 27 del sistema; el mod se compila
+para Java 25.
+
+**Cómo se eligió (y cómo elegir en una subida futura):** la versión más nueva en la que existan a la vez Fabric API,
 `fabric-language-kotlin`, GeckoLib, Spark, Sodium y Lithium. Hoy apunta a la **26.1.2**, que tiene más mods
 publicados; la 26.2 si ya los tiene todos. Se anota la elección y la fecha en [ROADMAP.md](ROADMAP.md).
 

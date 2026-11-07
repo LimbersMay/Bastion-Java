@@ -5,6 +5,14 @@ out/
 run/
 runs/
 .kotlin/
+classes/
+bin/
+
+# Volcados de la JVM
+hs_err_*.log
+replay_*.log
+*.hprof
+*.jfr
 
 # IDE
 .idea/

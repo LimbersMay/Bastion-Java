@@ -4,8 +4,9 @@ Juego de asedios para Minecraft Java Edition: defiendes un castillo con tus trop
 llegan, pican los muros, ponen escaleras, cruzan el agua y pelean en grupo. Es la continuación de **Bastion para
 Bedrock** (`../Bastion`), que se migra a Java para poder hacerlo **realista**.
 
-> **Estado (2026-11-07): fase 0, planificación.** Todavía no hay código. Está decidido migrar, elegido el stack y
-> definida la prueba inicial. Lo siguiente es esa prueba: [docs/PRUEBA-INICIAL.md](docs/PRUEBA-INICIAL.md).
+> **Estado (2026-11-07): fase 1, prueba inicial.** El proyecto (Minecraft 26.3, Fabric, Kotlin) compila y pasa
+> una GameTest vacía; todavía no hay IA. Lo siguiente, la escena A de
+> [docs/PRUEBA-INICIAL.md](docs/PRUEBA-INICIAL.md).
 
 ## Empieza aquí
 
@@ -40,7 +41,7 @@ Y que aguante batallas de cientos de unidades, con unidades aéreas y acuáticas
 
 | Pieza | Para qué |
 |---|---|
-| Minecraft Java Edition (versión fijada al empezar, línea 26.x) | El juego. Desde la línea 26.x Mojang publica el código sin ofuscar: se lee con sus nombres reales |
+| Minecraft Java Edition 26.3 | El juego. Desde la línea 26.x Mojang publica el código sin ofuscar: se lee con sus nombres reales |
 | Fabric (Loader, API y Loom) | Cargar el mod y modificar el juego por dentro (Mixins) |
 | Kotlin (`fabric-language-kotlin`) | El lenguaje. Se parece a TypeScript, lo que facilita portar la lógica de Bedrock |
 | GeckoLib + Blockbench | Modelos y animaciones: golpes, cargar escaleras, remar, arietes, dragones |

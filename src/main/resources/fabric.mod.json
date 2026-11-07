@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"id": "bastion",
+	"version": "${version}",
+	"name": "Bastion",
+	"description": "Asedios: defiende tu castillo con tus tropas contra oleadas de invasores que pican muros, ponen escaleras y cruzan el agua.",
+	"authors": ["Limbers"],
+	"license": "All-Rights-Reserved",
+	"environment": "*",
+	"entrypoints": {
+		"main": [{ "value": "dev.limbers.bastion.Bastion", "adapter": "kotlin" }],
+		"client": [{ "value": "dev.limbers.bastion.client.BastionClient", "adapter": "kotlin" }]
+	},
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*",
+		"fabric-language-kotlin": "*"
+	}
+}

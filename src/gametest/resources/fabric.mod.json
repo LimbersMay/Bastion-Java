@@ -1,0 +1,13 @@
+{
+	"schemaVersion": 1,
+	"id": "bastion-gametest",
+	"version": "1.0.0",
+	"name": "Bastion (GameTest)",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-gametest": ["dev.limbers.bastion.test.BastionGameTest"]
+	},
+	"depends": {
+		"bastion": "*"
+	}
+}

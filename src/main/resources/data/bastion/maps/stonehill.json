@@ -1,0 +1,132 @@
+// Stonehill Castle v1.4 (mapa de terceros, de mcpedl; el mundo no va en el repositorio). Convertido de Bedrock con
+// Chunker 1.21.0: las coordenadas coinciden (comprobado el 2026-11-07, puerta este en x -283, z 206, suelo a 124).
+// Datos de Bedrock (../Bastion/scripts/maps/stonehill-castle.ts, v0.1.55), elegido por Limbers para el rush:
+// mediano y con un solo acceso a pie.
+//
+// Un castillo de piedra sobre una colina (patio a y 125-129), con una aldea y campos al norte y al suroeste. Por el
+// valle del noreste (y ≈ 100) pasa un arroyo con un puentecito de madera; desde ahí un camino empedrado sube por la
+// ladera este hasta la puerta. Un puente largo de 3 bloques une el castillo con una torre aislada al sureste, y una
+// pasarela con almenas, con otra torre al oeste.
+//
+// Sin digZones: las laderas norte y oeste rodean el castillo a la altura del patio, y quien picara allí se saltaría
+// el muro.
+{
+	"id": "stonehill",
+	"name": "Stonehill Castle",
+	"description": "Castillo de piedra sobre una colina; a la única puerta se sube por un camino empedrado desde el valle.",
+
+	// La subida desde el valle, la puerta, el patio y la mitad oeste del castillo (las dos áreas cargadas de
+	// Bedrock juntas), desde el fondo del valle hasta lo alto de las torres.
+	"area": { "from": [-393, 90, 131], "to": [-226, 165, 259] },
+
+	"gates": [
+		{
+			// La entrada este: un pasaje de 10 bloques de ancho entre dos jambas de piedra (z 201 y z 212), suelo a
+			// y 125, bajo el paso de ronda (y 138).
+			"id": "gate",
+			// Delante del muro, donde acaba la subida.
+			"outside": [-279.5, 125, 207.5],
+			// La meta de los invasores, detrás del muro, en el pasaje.
+			"inside": [-289.5, 125, 207.5],
+			// Cierra la cara exterior del arco: roble oscuro, 3 de grosor y 6 de alto, solo sobre aire (las jambas y
+			// los adornos del arco quedan igual). Justo detrás (x -285) hay un poste de abeto que el muro no incluye:
+			// en Bedrock, con el muro en x -286..-284, las explosiones volaron el poste y la brecha se abrió con solo
+			// 7 bloques rotos. Con el muro puesto no se llega a pie de fuera al patio: es el único acceso.
+			"walls": [{ "from": [-284, 125, 201], "to": [-282, 130, 212], "block": "minecraft:dark_oak_planks" }],
+			"breachSpawns": [[-290.5, 125, 204.5], [-290.5, 125, 210.5]],
+			"breachTroops": [{ "unit": "invader_soldier", "count": 12 }],
+		},
+	],
+
+	// En el paso de ronda, encima de la puerta: se ve toda la subida.
+	"playerSpawns": [[-283.5, 138, 207.5], [-284.5, 138, 207.5], [-283.5, 138, 206.5]],
+
+	// Los dos guerreros, delante, pegados al muro por dentro: aguantan la brecha. Detrás, los soldados a lo largo del
+	// pasaje. Los tiradores solo disparan a lo que ven y desde el paso de ronda no se ve nada (el parapeto tapa la
+	// subida y el pasaje queda debajo): un pirómano y un arquero van en lo alto de la torre de la esquina, que ve la
+	// puerta y parte de la subida, y otros dos al final del pasaje, en el patio, que ven casi todo el pasaje.
+	"allies": [
+		{ "unit": "ally_warrior", "at": [-289.5, 125, 205.5] },
+		{ "unit": "ally_warrior", "at": [-289.5, 125, 211.5] },
+		{ "unit": "ally_soldier", "at": [-291.5, 125, 205.5] },
+		{ "unit": "ally_soldier", "at": [-291.5, 125, 209.5] },
+		{ "unit": "ally_soldier", "at": [-293.5, 126, 203.5] },
+		{ "unit": "ally_soldier", "at": [-293.5, 125, 211.5] },
+		{ "unit": "ally_soldier", "at": [-295.5, 126, 206.5] },
+		{ "unit": "ally_soldier", "at": [-295.5, 126, 209.5] },
+		{ "unit": "ally_pyromancer", "at": [-284.5, 150, 212.5] },
+		{ "unit": "ally_pyromancer", "at": [-310.5, 128, 203.5] },
+		{ "unit": "ally_archer", "at": [-283.5, 149, 213.5] },
+		{ "unit": "ally_archer", "at": [-312.5, 129, 207.5] },
+	],
+
+	// En el valle del noreste, a 29-41 bloques en línea recta de la puerta, sobre suelo abierto (5x5 libre
+	// alrededor). En Bedrock uno estaba en el puentecito del arroyo y otro pegado a la ladera: al salir varios a la
+	// vez se empujaban contra los bloques y se asfixiaban.
+	"invaderSpawns": [[-266.5, 100, 175.5], [-257.5, 101, 175.5], [-266.5, 98, 168.5], [-269.5, 102, 180.5]],
+
+	// Puestos de la retirada, todos alcanzables a pie desde el patio con el muro puesto.
+	"defensePosts": [
+		// Pegados al muro por dentro.
+		{ "at": [-287.5, 125, 204.5], "kind": "front" },
+		{ "at": [-287.5, 125, 209.5], "kind": "front" },
+		// A lo largo del pasaje hacia el patio.
+		{ "at": [-290.5, 125, 203.5], "kind": "side" },
+		{ "at": [-291.5, 126, 211.5], "kind": "side" },
+		{ "at": [-294.5, 126, 204.5], "kind": "side" },
+		{ "at": [-294.5, 126, 210.5], "kind": "side" },
+		{ "at": [-298.5, 127, 207.5], "kind": "side" },
+		// Para los que disparan, donde ven algo: lo alto de la torre de la esquina sureste y el final del pasaje.
+		{ "at": [-284.5, 150, 212.5], "kind": "high" },
+		{ "at": [-283.5, 149, 213.5], "kind": "high" },
+		{ "at": [-310.5, 128, 203.5], "kind": "high" },
+		{ "at": [-312.5, 129, 207.5], "kind": "high" },
+	],
+
+	// El patio: la reserva de la retirada.
+	"rallyPoints": [[-316.5, 129, 212.5], [-318.5, 129, 207.5], [-314.5, 129, 214.5]],
+
+	// La torre del homenaje: la sala grande al norte del patio (x -330..-316, z 184..192, suelo a y 127), con la
+	// puerta al patio en x -318, z 193. En Bedrock se llegaba a pie desde el patio en 29 pasos. El punto va en el
+	// centro de la sala.
+	"keep": [-325.5, 128, 188.5],
+
+	"sortiePoint": [-288.5, 125, 207.5],
+
+	// De cada 10 refuerzos: 5 soldados, 2 guerreros, 2 arqueros y 1 pirómano.
+	"reinforcements": {
+		"spawns": [[-316.5, 129, 205.5], [-312.5, 129, 210.5], [-320.5, 129, 208.5], [-314.5, 129, 214.5]],
+		"units": ["ally_soldier", "ally_warrior", "ally_soldier", "ally_archer", "ally_soldier", "ally_pyromancer", "ally_soldier", "ally_warrior", "ally_soldier", "ally_archer"],
+		"minField": 12,
+		"reservePerWave": 30,
+		"batch": 3,
+		"everySeconds": 5,
+	},
+
+	// Los mismos totales que Old Fallen Castle (elegidos por Limbers, 2026-11-06); parte de los soldados pasan a ser
+	// arqueros, tantos como magos.
+	"waves": [
+		{
+			"name": "Exploradores",
+			"groups": [{ "unit": "invader_soldier", "count": 15 }, { "unit": "invader_archer", "count": 5 }, { "unit": "invader_wizard", "count": 5 }],
+			"batchSize": 5,
+			"batchIntervalTicks": 50,
+		},
+		{
+			"name": "Asalto",
+			"groups": [{ "unit": "invader_soldier", "count": 34 }, { "unit": "invader_archer", "count": 6 }, { "unit": "invader_wizard", "count": 6 }],
+			"batchSize": 6,
+			"batchIntervalTicks": 50,
+		},
+		{
+			"name": "Gran ofensiva",
+			"groups": [{ "unit": "invader_soldier", "count": 52 }, { "unit": "invader_archer", "count": 8 }, { "unit": "invader_wizard", "count": 8 }],
+			"batchSize": 8,
+			"batchIntervalTicks": 50,
+		},
+	],
+
+	"lives": 5,
+	"countdownSeconds": 15,
+	"intermissionSeconds": 20,
+}

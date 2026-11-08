@@ -71,16 +71,17 @@ dependencies {
 	implementation("net.fabricmc:fabric-language-kotlin:${prop("fabric_kotlin_version")}")
 	implementation("com.geckolib:geckolib-fabric-${prop("minecraft_version")}:${prop("geckolib_version")}")
 
+	// La lógica pura (módulo core), dentro del jar del mod: para quien juega sigue siendo un solo mod.
+	implementation(project(":core"))
+	include(project(":core"))
+
 	// Solo para desarrollar y medir (no son dependencias del mod): Spark (perfilador, /spark profiler), Lithium
 	// (servidor: movimiento de criaturas, chunks) y Sodium (dibujo, FPS). Lithium y Sodium, como jugará Limbers.
 	localRuntime("maven.modrinth:spark:${prop("spark_version")}")
 	localRuntime("maven.modrinth:lithium:${prop("lithium_version")}")
 	localRuntime("maven.modrinth:sodium:${prop("sodium_version")}")
 
-	// Pruebas de lógica pura (sin Minecraft): src/test/kotlin
-	testImplementation(platform("org.junit:junit-bom:${prop("junit_version")}"))
-	testImplementation("org.junit.jupiter:junit-jupiter")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	// Las pruebas de lógica pura (JUnit) están en core/src/test. Las del juego, en src/gametest.
 }
 
 tasks.processResources {
@@ -90,10 +91,6 @@ tasks.processResources {
 	filesMatching("fabric.mod.json") {
 		expand("version" to version)
 	}
-}
-
-tasks.test {
-	useJUnitPlatform()
 }
 
 tasks.withType<JavaCompile>().configureEach {

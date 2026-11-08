@@ -1,25 +1,30 @@
 package dev.limbers.bastion.test
 
 import dev.limbers.bastion.Bastion
-import dev.limbers.bastion.battle.Battle
-import dev.limbers.bastion.battle.BattleDirector
-import dev.limbers.bastion.entity.BastionEntities
-import dev.limbers.bastion.entity.Invader
-import dev.limbers.bastion.logic.flow.Box
-import dev.limbers.bastion.logic.flow.FlowField
-import dev.limbers.bastion.logic.route.Cell
+import dev.limbers.bastion.director.Battle
+import dev.limbers.bastion.director.BattleDirector
+import dev.limbers.bastion.unit.BastionEntities
+import dev.limbers.bastion.unit.Invader
+import dev.limbers.bastion.unit.SiegeUnit
+import dev.limbers.bastion.core.unit.Side
+import dev.limbers.bastion.core.unit.Variation
+import dev.limbers.bastion.core.flow.Box
+import dev.limbers.bastion.core.flow.FlowField
+import dev.limbers.bastion.core.route.Cell
 import dev.limbers.bastion.world.LevelCells
-import dev.limbers.bastion.scene.AssaultScene
+import dev.limbers.bastion.debug.AssaultScene
 import net.fabricmc.fabric.api.gametest.v1.GameTest
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.gametest.framework.GameTestHelper
 import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.LadderBlock
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 
 /**
  * Pruebas dentro del juego. Se ejecutan con `./gradlew runGameTest` (y dentro de `./gradlew build`).
@@ -130,7 +135,7 @@ class BastionGameTest {
 		val flow = FlowField.compute(box, goals, LevelCells(level, ItemStack(Items.IRON_AXE)))
 		val battle = Battle(level, flow)
 		val invaders = (0 until 10).map { i ->
-			BastionEntities.INVADER.spawn(level, p(2 + i % 2, 1, i), EntitySpawnReason.COMMAND)!!.also { battle.add(it) }
+			BastionEntities.INVADER_SOLDIER.type.spawn(level, p(2 + i % 2, 1, i), EntitySpawnReason.COMMAND)!!.also { battle.add(it) }
 		}
 		BattleDirector.start(battle)
 		invaders.forEach { watchNoTeleport(helper, it) }
@@ -139,6 +144,69 @@ class BastionGameTest {
 			helper.assertTrue(behind == invaders.size, "solo $behind de ${invaders.size} han cruzado la puerta")
 			report(helper, "campoDeFlujo", "${invaders.size} invasores al otro lado del muro")
 		}
+	}
+
+	/**
+	 * La ficha llega a la entidad: 10 de cada soldado nacen con su arma en la mano, el golpe de la ficha (el arma
+	 * contada una sola vez) y la vida de la ficha ±10 %, distinta entre ellos.
+	 */
+	@GameTest(structure = ARENA, maxTicks = 40)
+	fun fichaDeUnidades(helper: GameTestHelper) {
+		val origin = flat(helper)
+		val units = BastionEntities.ALL.flatMap { r -> (0 until 10).map { i -> r.type.spawn(helper.level, origin.offset(2 + i, 1, if (r.unit.side == Side.ALLY) 1 else 9), EntitySpawnReason.COMMAND)!! } }
+		helper.succeedWhen {
+			helper.assertTrue(helper.tick >= 2, "esperando a que se equipen")
+			for (u in units) {
+				val def = u.unit
+				val spread = Variation.spread(def.health)
+				helper.assertTrue(u.mainHandItem.item == SiegeUnit.weaponItem(def), "${def.id} sin su arma: ${u.mainHandItem}")
+				helper.assertTrue(abs(u.getAttributeValue(Attributes.ATTACK_DAMAGE) - def.damage) < 1e-6, "${def.id} pega ${u.getAttributeValue(Attributes.ATTACK_DAMAGE)}, la ficha dice ${def.damage}")
+				helper.assertTrue(u.maxHealth in (def.health - spread).toFloat()..(def.health + spread).toFloat(), "${def.id} con ${u.maxHealth} de vida, fuera de ${def.health} ± $spread")
+				helper.assertTrue(u.health == u.maxHealth, "${def.id} no nace con la vida llena")
+			}
+			for (r in BastionEntities.ALL) {
+				val healths = units.filter { it.unit == r.unit }.map { it.maxHealth }
+				helper.assertTrue(healths.toSet().size > 1, "${r.unit.id}: los 10 con la misma vida, sin variación")
+			}
+			val summary = BastionEntities.ALL.joinToString("; ") { r ->
+				val hs = units.filter { it.unit == r.unit }.map { it.maxHealth }
+				"${r.unit.id} golpe ${r.unit.damage}, vida ${"%.1f".format(hs.min())}-${"%.1f".format(hs.max())}"
+			}
+			units.forEach { it.discard() }
+			report(helper, "fichaDeUnidades", summary)
+		}
+	}
+
+	/**
+	 * Duelo de un soldado invasor contra un soldado aliado en campo abierto, sin puesto ni batalla. Regla de Limbers
+	 * (Bedrock): un duelo entre soldados dura de 6 a 10,5 s. De momento solo se mide y se apunta.
+	 */
+	@GameTest(structure = ARENA, maxTicks = 1200)
+	fun duelo(helper: GameTestHelper) {
+		val origin = flat(helper)
+		val invader = BastionEntities.INVADER_SOLDIER.type.spawn(helper.level, origin.offset(8, 1, 5), EntitySpawnReason.COMMAND)!!
+		val ally = BastionEntities.ALLY_SOLDIER.type.spawn(helper.level, origin.offset(14, 1, 5), EntitySpawnReason.COMMAND)!!
+		var firstHit = -1L
+		helper.onEachTick {
+			if (firstHit < 0 && (invader.health < invader.maxHealth || ally.health < ally.maxHealth)) firstHit = helper.tick
+		}
+		helper.succeedWhen {
+			helper.assertTrue(!invader.isAlive || !ally.isAlive, "el duelo sigue (invasor ${invader.health}, aliado ${ally.health})")
+			val winner = if (invader.isAlive) "gana el invasor con ${invader.health}" else "gana el aliado con ${ally.health}"
+			val seconds = (helper.tick - firstHit) / 20.0
+			listOf(invader, ally).forEach { it.discard() }
+			report(helper, "duelo", "${"%.1f".format(seconds)} s desde el primer golpe; $winner")
+		}
+	}
+
+	/** Llano de piedra en toda la estructura, sin muros: devuelve la esquina (y = suelo). */
+	private fun flat(helper: GameTestHelper): BlockPos {
+		val origin = helper.absolutePos(BlockPos(0, 0, 0))
+		for (x in 0..22) for (z in 0..10) {
+			helper.level.setBlock(origin.offset(x, 0, z), Blocks.STONE.defaultBlockState(), 2)
+			for (y in 1..6) helper.level.setBlock(origin.offset(x, y, z), Blocks.AIR.defaultBlockState(), 2)
+		}
+		return origin
 	}
 
 	/** Una línea por prueba superada, con los ticks: así se pueden sacar tiempos de los registros. */

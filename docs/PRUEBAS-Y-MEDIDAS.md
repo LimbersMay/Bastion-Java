@@ -6,7 +6,8 @@ En Bedrock, probar era encender un servidor BDS, mandar órdenes por `cmd.txt`, 
 ## 1. Pruebas de lógica (JUnit)
 
 - La lógica pura (rutas, grupos, moral, postura, oleadas...) va en clases sin dependencias del juego.
-- Pruebas JUnit 5 en `src/test/kotlin`, que corren con `./gradlew test` en segundos.
+- Pruebas JUnit 5 en `core/src/test/kotlin`, que corren con `./gradlew :core:test` en segundos (y dentro de
+  `./gradlew build`). Entre ellas, una que lee y comprueba los mapas reales del mod.
 - Al portar un `*Logic.ts` de Bedrock, se portan también sus pruebas (`../Bastion/tests/*.test.ts`): son la
   garantía de que la traducción hace lo mismo.
 
@@ -15,7 +16,7 @@ En Bedrock, probar era encender un servidor BDS, mandar órdenes por `cmd.txt`, 
 GameTest arranca un servidor sin pantalla, construye una estructura pequeña para cada prueba, la ejecuta y dice si
 pasó o falló. Es el sustituto del laboratorio de Bedrock, pero repetible y automático.
 
-- **Configuración:** con Fabric Loom, en `build.gradle`, bloque `fabricApi { configureTests { ... } }`. Las clases
+- **Configuración:** con Fabric Loom, en `build.gradle.kts`, bloque `fabricApi { configureTests { ... } }`. Las clases
   de prueba se registran en el punto de entrada `fabric-gametest` de `fabric.mod.json`. Se puede pedir un informe en
   archivo (propiedad `fabric-api.gametest.report-file`). Los detalles, en la documentación de Fabric de la versión
   fijada: https://docs.fabricmc.net/develop/ (sección de pruebas automáticas).

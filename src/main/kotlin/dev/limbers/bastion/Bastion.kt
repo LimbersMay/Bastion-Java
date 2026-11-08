@@ -1,9 +1,11 @@
 package dev.limbers.bastion
 
-import dev.limbers.bastion.battle.BattleDirector
-import dev.limbers.bastion.battle.Bench
+import dev.limbers.bastion.director.BattleDirector
+import dev.limbers.bastion.debug.Bench
+import dev.limbers.bastion.debug.DebugView
 import dev.limbers.bastion.command.BastionCommands
-import dev.limbers.bastion.entity.BastionEntities
+import dev.limbers.bastion.map.BastionMaps
+import dev.limbers.bastion.unit.BastionEntities
 import net.fabricmc.api.ModInitializer
 import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
@@ -17,9 +19,11 @@ object Bastion : ModInitializer {
 
 	override fun onInitialize() {
 		BastionEntities.initialize()
+		BastionMaps.register()
 		BastionCommands.register()
 		BattleDirector.register()
 		Bench.register()
+		DebugView.register()
 		LOGGER.info("[bastion] Cargado")
 	}
 

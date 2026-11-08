@@ -1,7 +1,7 @@
 package dev.limbers.bastion.world
 
-import dev.limbers.bastion.logic.route.CellAt
-import dev.limbers.bastion.logic.route.RouteCell
+import dev.limbers.bastion.core.route.CellAt
+import dev.limbers.bastion.core.route.RouteCell
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.item.ItemStack

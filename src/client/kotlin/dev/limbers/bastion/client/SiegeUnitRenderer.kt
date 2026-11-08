@@ -1,7 +1,7 @@
 package dev.limbers.bastion.client
 
 import dev.limbers.bastion.Bastion
-import dev.limbers.bastion.entity.SiegeUnit
+import dev.limbers.bastion.unit.SiegeUnit
 import net.minecraft.client.model.geom.ModelLayers
 import net.minecraft.client.model.player.PlayerModel
 import net.minecraft.client.renderer.entity.EntityRendererProvider

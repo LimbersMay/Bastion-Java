@@ -1,15 +1,18 @@
 package dev.limbers.bastion.client
 
-import dev.limbers.bastion.entity.BastionEntities
-import dev.limbers.bastion.entity.Defender
-import dev.limbers.bastion.entity.Invader
+import dev.limbers.bastion.unit.BastionEntities
+import dev.limbers.bastion.unit.SiegeUnit
 import net.fabricmc.api.ClientModInitializer
 import net.minecraft.client.renderer.entity.EntityRenderers
 
 /** Punto de entrada del cliente: dibujo, modelos y teclas. */
 object BastionClient : ClientModInitializer {
 	override fun onInitializeClient() {
-		EntityRenderers.register(BastionEntities.INVADER) { SiegeUnitRenderer<Invader>(it, "invader_soldier", Invader.SKINS) }
-		EntityRenderers.register(BastionEntities.DEFENDER) { SiegeUnitRenderer<Defender>(it, "ally_soldier", Defender.SKINS) }
+		// Cada unidad, con el modelo de jugador y las skins de su ficha (`<id>_<n>.png`).
+		for (r in BastionEntities.ALL) register(r)
+	}
+
+	private fun <T : SiegeUnit> register(r: BastionEntities.Registered<T>) {
+		EntityRenderers.register(r.type) { SiegeUnitRenderer<T>(it, r.unit.id, r.unit.skins) }
 	}
 }

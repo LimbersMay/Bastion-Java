@@ -32,8 +32,13 @@ Revisado archivo por archivo en `../Bastion` (v0.1.55): son puros los que no imp
 | Pruebas (`tests/*.test.ts`) | 2.597 | Sí, junto con el módulo que prueban |
 | Pegamento con el juego (`siegeManager`, `hunt`, `rescue`, `unreachable`...) | ~4.800 | No. Solo para leer qué hace cada sistema y en qué orden |
 
-Ya portado en la Fase 1: `routeLogic` (`RoutePlanner`, con sus 25 pruebas) y las reglas de `ladderLogic`
-(`holdsLadder`, dentro del buscador). `digLogic` lo sustituyen los tiempos de picar del juego (`Digging`).
+Ya portado:
+
+- **Fase 1:** `routeLogic` (`RoutePlanner`, con sus 25 pruebas) y las reglas de `ladderLogic` (`holdsLadder`,
+  dentro del buscador). `digLogic` lo sustituyen los tiempos de picar del juego (`Digging`).
+- **Fase 2:** `units/catalog.ts` (`core.unit.Units`, con la variación de `tools/units/generate.ts`) y
+  `maps/types.ts` y `maps/validate.ts` (`core.map`), sin los campos de los parches. Stonehill, en
+  `data/bastion/maps/stonehill.json`. `ally_wizard` pasa a llamarse `ally_pyromancer`.
 
 ## Lógica pura: se traduce a Kotlin con sus pruebas
 

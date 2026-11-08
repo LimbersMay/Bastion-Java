@@ -29,48 +29,68 @@ Partida (oleadas, fases, victoria/derrota)         ← porta wavePlan, siegeMana
 
 ## Estructura del código
 
-Decidida por Limbers el 2026-11-07; se monta en la Fase 2. Es la de Bedrock (lógica pura separada del pegamento con
+Decidida por Limbers el 2026-11-07 y montada en la Fase 2. Es la de Bedrock (lógica pura separada del pegamento con
 el juego) con dos mejoras que Java permite.
 
 ### Dos módulos de Gradle
 
 ```
-core/   Kotlin puro: no ve Minecraft. Rutas, campo de flujo, rejilla, grupos, moral, oleadas, muros...
-        Pruebas JUnit que tardan segundos. Es lo que en Bedrock era scripts/systems/*Logic.ts.
-mod/    El mod de Fabric. Usa core: le da el mundo (casillas, unidades) y aplica lo que decide.
+core/   Kotlin puro: no ve Minecraft. Rutas, campo de flujo, rejilla, ficha de unidades, formato de los mapas,
+        y más adelante grupos, moral, oleadas, muros... Pruebas JUnit (core/src/test) que tardan segundos.
+        Es lo que en Bedrock era scripts/systems/*Logic.ts.
+(raíz)  El mod de Fabric (src/main, src/client, src/gametest). Usa core: le da el mundo (casillas, unidades) y
+        aplica lo que decide.
 ```
+
+El mod se queda en la raíz y no en una carpeta `mod/`: así `run/`, las tareas de Gradle (`runClient`,
+`runServer`, `runGameTest`) y los scripts de `tools/` siguen donde estaban.
 
 - **Por qué un módulo y no un paquete:** el compilador impide que `core` use código de Minecraft. La separación no
   depende de acordarse.
 - `core` va dentro del jar del mod; para quien juega sigue siendo un solo mod.
 - **Qué va a `core`:** lo que se puede probar con una función `cellAt` o con listas de números. Si una clase
-  necesita `Level`, `Entity` o `BlockPos`, va a `mod`. Para posiciones, `core` usa sus propios tipos.
+  necesita `Level`, `Entity` o `BlockPos`, va al mod. Para posiciones, `core` usa sus propios tipos (`Cell`, `Pos`).
+- **JSON en `core`:** con kotlinx.serialization, que ya viene dentro de fabric-language-kotlin (no es una
+  dependencia nueva para quien juega).
 
 ### Paquetes del mod (`dev.limbers.bastion`)
 
 | Paquete | Qué va | Ejemplos de hoy |
 |---|---|---|
-| `unit` | Entidades, ficha de unidad, roles y sus `Goal` (`unit.ai`) | `Invader`, `Defender`, `AssaultGoal` |
+| `unit` | Entidades, su registro desde la ficha, roles y sus `Goal` (`unit.ai`) | `SiegeUnit`, `Invader`, `Defender`, `BastionEntities`, `AssaultGoal` |
 | `director` | Directores que reparten trabajo cada tick: batalla, grupos, moral, rescate | `BattleDirector` |
 | `game` | La partida: cuenta atrás, oleadas, descanso, victoria y derrota | — |
 | `world` | Leer y tocar el mundo: casillas, picar, zonas, muros | `LevelCells`, `Digging` |
-| `map` | Cargar y comprobar los mapas JSON | — |
+| `map` | Cargar los mapas JSON y comprobarlos sobre el mundo | `BastionMaps` |
 | `command` | Órdenes `/bastion` | `BastionCommands` |
-| `debug` | Escenas de prueba, ver rutas y campos, medir | `AssaultScene`, `BattleScene`, `Bench` |
+| `debug` | Escenas de prueba, ver rutas y campos, medir | `AssaultScene`, `BattleScene`, `Bench`, `DebugView` |
 | `client` | Solo cliente: dibujo, modelos, texturas | `SiegeUnitRenderer` |
 
-En `core`, un paquete por tema: `route`, `flow`, `squad`, `morale`, `wave`, `wall`...
+En `core`, un paquete por tema: hoy `route`, `flow`, `unit` y `map`; más adelante `wave`, `squad`, `morale`,
+`wall`...
 
 ### Datos
 
-- **Unidades: una ficha en Kotlin** (como `scripts/units/catalog.ts`). El juego exige registrar cada tipo de
-  criatura al arrancar, y en Kotlin un error en la ficha salta al compilar. La ficha la usan el registro de
-  entidades, los atributos y los roles.
-- **Mapas: archivos JSON** en `src/main/resources/data/bastion/maps/<mapa>.json`: aparición, puertas, muros,
-  puestos, patio, torre, orillas y lugares. Se corrigen sin recompilar. Al cargarlos se comprueban (lo que hacía
-  `maps/validate.ts`) y un error dice qué mapa y qué campo.
-- **Mundos:** convertidos de Bedrock con Chunker. **No van al repositorio** (son de terceros): se guardan fuera, con
-  una copia limpia para reponerlos entre pruebas.
+- **Unidades: una ficha en Kotlin** (`core.unit.Units`, como `scripts/units/catalog.ts`): bando, rol, vida, golpe,
+  velocidad, arma, skins, resistencia al empuje y disparo. El juego exige registrar cada tipo de criatura al
+  arrancar, y en Kotlin un error en la ficha salta al compilar.
+  - `BastionEntities` registra una entidad por ficha **cuyo rol ya existe** (hoy, los dos soldados). Las demás
+    fichas esperan a su rol: una unidad sin comportamiento no debe poder nacer.
+  - **El golpe de la ficha incluye el arma.** El juego suma a cualquier criatura lo que da el arma de la mano
+    (hacha de hierro, 8; espada de hierro, 5), así que `SiegeUnit` pone de base la ficha menos el arma.
+  - Variación de Limbers (`core.unit.Variation`): ±10 % de vida al nacer y ±10 % en cada golpe; las cifras de 2-3
+    no varían.
+  - Skins: `assets/bastion/textures/entity/<id>_<n>.png`; nombres: `entity.bastion.<id>` en los idiomas.
+- **Mapas: archivos JSON** en `src/main/resources/data/bastion/maps/<id>.json`, con comentarios para explicar cada
+  punto. Formato en `core.map.MapDef`: área, puertas (fuera, dentro, muros, brecha), jugadores, aliados,
+  aparición de invasores, flancos y zonas de picar, puestos, patio, torre, salida, refuerzos y oleadas.
+  - `MapValidator` los comprueba (lo que hacía `maps/validate.ts`, más: cada punto dentro del área y cada unidad
+    del bando que toca). Un mapa roto no tumba el servidor: el registro dice qué mapa y qué campo.
+  - Una prueba JUnit lee los mapas reales del mod en cada build.
+  - `/bastion mapa <id> comprobar` mira en el mundo que en cada punto quepa alguien de pie.
+  - Se leen también de los paquetes de datos de un mundo, y se recargan con `/reload`.
+- **Mundos:** convertidos de Bedrock con Chunker (`tools/mundo.sh`). **No van al repositorio** (son de
+  terceros): viven en `run/<id>`, con una copia limpia en `run/mundos-limpios/<id>` para reponerlos entre pruebas.
 
 ## Navegación: rutas con acciones
 

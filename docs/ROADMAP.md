@@ -5,10 +5,40 @@ sesión, actualiza «Dónde nos quedamos».
 
 ## Dónde nos quedamos
 
-*Última actualización: 2026-11-07 (segunda sesión). Prueba inicial cerrada: escenas A y C hechas, la batalla de
-400 corre a 20 ticks/s también en el castillo de Stonehill convertido de Bedrock, y Limbers la ve fluida en su PC.
-Limbers decidió seguir en Java y aprobó las fases nuevas y la estructura. **Lo siguiente: la Fase 2, estructura y
-datos** (ver «Fases»). La escena B (barco) pasa a la Fase 6, la del agua.*
+*Última actualización: 2026-11-07 (segunda sesión). Fase 2 (estructura y datos) casi hecha, en la rama
+`feature/fase-2-estructura`, sin commit todavía: módulo `core`, paquetes nuevos, ficha de las 7 unidades, Stonehill
+en JSON comprobado sobre el mundo (43 de 43 puntos), `tools/mundo.sh` y `/bastion ver`. Falta: que Limbers lo vea,
+convertir los otros tres mundos (hay que descargarlos de mcpedl) y decidir la duración de los duelos.*
+
+- **Fase 2, estructura y datos (2026-11-07).** Rama `feature/fase-2-estructura`.
+  - **Módulo `core`** (Gradle, Kotlin sin Minecraft): rutas, campo de flujo y rejilla movidos allí con sus 37
+    pruebas; va dentro del jar del mod (`include`). El mod se queda en la raíz. Paquetes del mod: `unit` (antes
+    `entity`), `director` (antes `battle`), `debug` (escenas, `Bench`, `DebugView`), `map`, `world`, `command`.
+  - **Ficha de unidades** (`core.unit.Units`): las 7 de Bedrock con sus cifras. El pirómano pasa a llamarse
+    `ally_pyromancer` (en Bedrock, `ally_wizard`). Solo nacen los dos soldados, los únicos con comportamiento. Ids
+    de entidad nuevos: `bastion:invader_soldier` y `bastion:ally_soldier` (los mundos con unidades viejas las
+    pierden al cargar, con un aviso).
+  - **Arreglo: el arma contaba dos veces.** El juego suma a cualquier criatura el arma de su mano. Hasta ahora el
+    invasor pegaba 17 (9 + 8 del hacha) y el defensor 15 (10 + 5 de la espada). Ahora pegan lo de la ficha, 9 y 10.
+  - **Variación** de Limbers (±10 % de vida al nacer y en cada golpe), como en Bedrock. Medido (GameTest
+    `fichaDeUnidades`, 5 pasadas): invasores con 36,4 a 43,9 de vida; aliados con 54,1 a 65,8.
+  - **Duelo** (GameTest `duelo`, 5 pasadas, un soldado contra otro en llano, mod 0.0.1): **3,0 a 4,7 s** desde el
+    primer golpe; gana siempre el aliado (con 12 a 33 de vida). La regla de Bedrock dice 6 a 10,5 s: **pendiente
+    de que Limbers decida** (ver «Decisiones abiertas»).
+  - **Mapas en JSON** (`data/bastion/maps/<id>.json`, con comentarios): formato `core.map.MapDef`, lector
+    `MapFormat` (kotlinx.serialization, que ya trae fabric-language-kotlin) y comprobaciones `MapValidator`. Sin
+    los parches de Bedrock (rutas de subida y de regreso, bloqueos, muros retirados). Stonehill pasado con sus datos
+    y comentarios de Bedrock; una prueba JUnit lo lee en cada build. El mod los carga al arrancar y con `/reload`.
+  - **Stonehill comprobado sobre el mundo:** `/bastion mapa stonehill comprobar` da **43 de 43 puntos bien**
+    (puerta, aparición, aliados, puestos, patio, torre, salida y refuerzos): en todos cabe alguien de pie sobre
+    suelo firme. Chunker mantiene las coordenadas.
+  - **`tools/mundo.sh`:** `convertir <mcworld> <id>` (descarga Chunker 1.21.0 una vez y comprueba su suma),
+    `reponer <id>` (copia limpia sobre `run/<id>`) y `usar <id>` (el mundo del servidor de desarrollo). Copia limpia
+    de Stonehill en `run/mundos-limpios/stonehill`.
+  - **`/bastion ver rutas|campo|nada`** (`DebugView`): partículas con la ruta de cada invasor (verde andar, rojo
+    picar, azul escalera) y el campo de flujo alrededor del jugador (color por distancia y hacia dónde manda).
+  - Otras órdenes: `/bastion mapas` y `/bastion mapa <id> ir`.
+  - Pruebas: 57 JUnit en `core` y 8 GameTest, 5 de 5 pasadas sin fallos.
 
 - **Fases y estructura decididas por Limbers (2026-11-07).**
   - Las fases se rehacen para que **cada una termine con Stonehill jugable y mejor que antes**. Ver «Fases».
@@ -218,16 +248,18 @@ Criterios y escenas en [PRUEBA-INICIAL.md](PRUEBA-INICIAL.md).
 El esqueleto sobre el que crece todo. Casi sin juego nuevo, pero al cerrarla la escena A, la batalla de 400 y sus
 GameTest funcionan igual que antes, sobre la estructura nueva.
 
-- [ ] Separar la lógica pura en el módulo `core` (Kotlin sin Minecraft, pruebas JUnit) y el mod en `mod`. Mover
-      rutas, campo de flujo y rejilla a `core`. Ver [ARQUITECTURA.md](ARQUITECTURA.md), «Estructura del código».
-- [ ] Reordenar los paquetes del mod: `unit`, `director`, `game`, `world`, `map`, `debug`.
-- [ ] Ficha de unidad en Kotlin con las 7 unidades de Bedrock (vida, golpe, velocidad, arma, skins, bando y rol),
-      con la variación de ±10 %. Al principio solo nacen las que ya tienen comportamiento (soldados).
-- [ ] Mapas en JSON (`data/bastion/maps/*.json`): formato, lector y comprobaciones (lo que hacía
-      `maps/validate.ts`). Stonehill primero, con sus datos de Bedrock.
-- [ ] Convertir Old Fallen Castle, The Combat Castle e Ice Castle con Chunker y comprobar sus coordenadas.
-- [ ] Copia limpia de cada mundo convertido, para reponerlo entre pruebas.
-- [ ] Herramienta para ver rutas y campos de flujo en el juego (depuración).
+- [x] Separar la lógica pura en el módulo `core` (Kotlin sin Minecraft, pruebas JUnit); el mod se queda en la
+      raíz. Rutas, campo de flujo y rejilla movidos a `core`. Ver [ARQUITECTURA.md](ARQUITECTURA.md).
+- [x] Reordenar los paquetes del mod: `unit`, `director`, `world`, `map`, `debug` (`game` llegará en la Fase 3).
+- [x] Ficha de unidad en Kotlin con las 7 unidades de Bedrock, con la variación de ±10 %. Solo nacen los
+      soldados. De paso, el arma ya no cuenta dos veces en el golpe.
+- [x] Mapas en JSON: formato, lector y comprobaciones. Stonehill con sus datos de Bedrock, 43 de 43 puntos bien
+      sobre el mundo.
+- [ ] Convertir Old Fallen Castle, The Combat Castle e Ice Castle con `tools/mundo.sh` y comprobar sus
+      coordenadas. **Falta que Limbers descargue los `.mcworld` de mcpedl** (enlaces en
+      `../Bastion/assets/worlds/README.md`). Sus mapas JSON, cuando se jueguen.
+- [x] Copia limpia de cada mundo convertido (`tools/mundo.sh`): hecha la de Stonehill.
+- [x] Ver rutas y campos de flujo en el juego (`/bastion ver`). Falta que Limbers lo vea.
 
 ### Fase 3: primera partida jugable en Stonehill
 
@@ -303,6 +335,10 @@ Lo que en Bedrock era su Fase 3, que allí quedó sin cerrar. Cada punto, solo s
   Kotlin. Ver [ARQUITECTURA.md](ARQUITECTURA.md).
 
 ## Decisiones abiertas
+
+- **Duración de los duelos:** la regla de Bedrock es de 6 a 10,5 s entre soldados; en Java, con las cifras de la
+  ficha y el ritmo de golpes del juego (uno por segundo), duran de 3 a 4,7 s. Opciones: dejarlo, subir la vida,
+  bajar el golpe, o espaciar los golpes.
 
 - **Barcos:** barco del juego dirigido por Mixin, o entidad balsa propia de varias plazas.
 - **Modelos:** cuándo pasar del modelo humanoide del juego a modelos propios con GeckoLib.

@@ -1,4 +1,9 @@
 {
-	"entity.bastion.invader": "Invader",
-	"entity.bastion.defender": "Defender"
+	"entity.bastion.ally_soldier": "Allied Soldier",
+	"entity.bastion.ally_warrior": "Allied Warrior",
+	"entity.bastion.ally_pyromancer": "Allied Pyromancer",
+	"entity.bastion.ally_archer": "Allied Archer",
+	"entity.bastion.invader_soldier": "Invader Soldier",
+	"entity.bastion.invader_wizard": "Invader Wizard",
+	"entity.bastion.invader_archer": "Invader Archer"
 }

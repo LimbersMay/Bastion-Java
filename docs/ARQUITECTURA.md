@@ -1,6 +1,7 @@
 # Arquitectura prevista
 
-Es una propuesta: se confirma o se corrige con la [prueba inicial](PRUEBA-INICIAL.md). Recoge lo aprendido en
+La [prueba inicial](PRUEBA-INICIAL.md) confirmó lo esencial (rutas por tramos, campo de flujo y rejilla) y Limbers
+aprobó la estructura del código el 2026-11-07. Lo de «Más adelante» sigue siendo plan. Recoge lo aprendido en
 Bedrock (`../Bastion/docs/IA.md`) y la investigación de rutas a gran escala (`../Bastion/docs/refs/rutas-y-escalada.md`).
 
 ## Principios
@@ -26,6 +27,51 @@ Partida (oleadas, fases, victoria/derrota)         ← porta wavePlan, siegeMana
                  └─ Animación y sonido (GeckoLib)
 ```
 
+## Estructura del código
+
+Decidida por Limbers el 2026-11-07; se monta en la Fase 2. Es la de Bedrock (lógica pura separada del pegamento con
+el juego) con dos mejoras que Java permite.
+
+### Dos módulos de Gradle
+
+```
+core/   Kotlin puro: no ve Minecraft. Rutas, campo de flujo, rejilla, grupos, moral, oleadas, muros...
+        Pruebas JUnit que tardan segundos. Es lo que en Bedrock era scripts/systems/*Logic.ts.
+mod/    El mod de Fabric. Usa core: le da el mundo (casillas, unidades) y aplica lo que decide.
+```
+
+- **Por qué un módulo y no un paquete:** el compilador impide que `core` use código de Minecraft. La separación no
+  depende de acordarse.
+- `core` va dentro del jar del mod; para quien juega sigue siendo un solo mod.
+- **Qué va a `core`:** lo que se puede probar con una función `cellAt` o con listas de números. Si una clase
+  necesita `Level`, `Entity` o `BlockPos`, va a `mod`. Para posiciones, `core` usa sus propios tipos.
+
+### Paquetes del mod (`dev.limbers.bastion`)
+
+| Paquete | Qué va | Ejemplos de hoy |
+|---|---|---|
+| `unit` | Entidades, ficha de unidad, roles y sus `Goal` (`unit.ai`) | `Invader`, `Defender`, `AssaultGoal` |
+| `director` | Directores que reparten trabajo cada tick: batalla, grupos, moral, rescate | `BattleDirector` |
+| `game` | La partida: cuenta atrás, oleadas, descanso, victoria y derrota | — |
+| `world` | Leer y tocar el mundo: casillas, picar, zonas, muros | `LevelCells`, `Digging` |
+| `map` | Cargar y comprobar los mapas JSON | — |
+| `command` | Órdenes `/bastion` | `BastionCommands` |
+| `debug` | Escenas de prueba, ver rutas y campos, medir | `AssaultScene`, `BattleScene`, `Bench` |
+| `client` | Solo cliente: dibujo, modelos, texturas | `SiegeUnitRenderer` |
+
+En `core`, un paquete por tema: `route`, `flow`, `squad`, `morale`, `wave`, `wall`...
+
+### Datos
+
+- **Unidades: una ficha en Kotlin** (como `scripts/units/catalog.ts`). El juego exige registrar cada tipo de
+  criatura al arrancar, y en Kotlin un error en la ficha salta al compilar. La ficha la usan el registro de
+  entidades, los atributos y los roles.
+- **Mapas: archivos JSON** en `src/main/resources/data/bastion/maps/<mapa>.json`: aparición, puertas, muros,
+  puestos, patio, torre, orillas y lugares. Se corrigen sin recompilar. Al cargarlos se comprueban (lo que hacía
+  `maps/validate.ts`) y un error dice qué mapa y qué campo.
+- **Mundos:** convertidos de Bedrock con Chunker. **No van al repositorio** (son de terceros): se guardan fuera, con
+  una copia limpia para reponerlos entre pruebas.
+
 ## Navegación: rutas con acciones
 
 En Bedrock, `routeLogic.ts` ya planificaba con acciones: caminar, saltar, caer, nadar, picar dentro de la zona de
@@ -43,7 +89,7 @@ mano. En Java la ruta **es** lo que sigue la unidad.
 | Colocar escalera y subir | Por tramo, y solo si lleva escaleras | `Goal` de escalar |
 | Romper puerta | Según material | `Goal` de picar |
 
-- **Dos caminos técnicos, a decidir en la prueba inicial:**
+- **Dos caminos técnicos** (elegido el 2, que funcionó en la escena A):
   1. **Ampliar el del juego:** un `NodeEvaluator` y una `PathNavigation` propios. El buscador A* del juego devuelve
      un `Path` y la unidad lo sigue; los nodos especiales (picar, escalar) se marcan y un `Goal` actúa al llegar.
   2. **Buscador propio** (el de Bedrock portado) que devuelve tramos. Los tramos de caminar se pasan a la
@@ -102,6 +148,9 @@ Con 400 unidades no se calculan 400 rutas.
 Los parches de Bedrock (marcadores, toque, balsas, rescate de encajados, abandono por atasco) **no se portan**. Si
 en Java vuelve a hacer falta algo parecido, primero se busca la causa con el depurador.
 
+Ni siquiera los directores de la tabla se portan por adelantado: cada uno se porta en su fase y **solo si en Java
+aparece el problema que resolvía**, y solo la parte que haga falta (decisión de Limbers, 2026-11-07).
+
 ## Más adelante: lo que Bedrock no permitía
 
 - **Unidades aéreas:** la navegación de vuelo del juego (`FlyingPathNavigation`) se puede leer y ampliar.
@@ -115,8 +164,6 @@ en Java vuelve a hacer falta algo parecido, primero se busca la causa con el dep
 
 ## Datos
 
-- **Fichas de unidad:** se pasan a Kotlin (un `object` o un JSON de datos del mod) con las cifras de Bedrock. El
-  generador de JSON de Bedrock no hace falta: en Java la ficha se lee al crear la entidad.
-- **Mapas:** cada mapa declara sus puntos, como en `scripts/maps/*.ts`: aparición, rutas de subida, puestos,
-  muros, patio, torre y orillas. Al convertir el mundo con Chunker las coordenadas se mantienen; hay que
-  comprobarlo con el primer mapa.
+Ver «Estructura del código», «Datos». El generador de JSON de Bedrock (`tools/units/`) no hace falta: en Java la
+ficha se lee al crear la entidad. Las coordenadas se mantienen al convertir con Chunker (comprobado en Stonehill,
+2026-11-07).

@@ -5,11 +5,21 @@ sesión, actualiza «Dónde nos quedamos».
 
 ## Dónde nos quedamos
 
-*Última actualización: 2026-11-07 (segunda sesión). Escenas A y C hechas. A: el invasor pica y pone sus escaleras él
-mismo (commit `ea3377a`). C: 200 contra 200 a 20 ticks/s, con campo de flujo y rejilla. Falta: los FPS en el PC de
-Limbers en un mapa real, el desglose de Spark y la escena B (barco).*
+*Última actualización: 2026-11-07 (segunda sesión). Prueba inicial cerrada: escenas A y C hechas, la batalla de
+400 corre a 20 ticks/s también en el castillo de Stonehill convertido de Bedrock, y Limbers la ve fluida en su PC.
+Limbers decidió seguir en Java y aprobó las fases nuevas y la estructura. **Lo siguiente: la Fase 2, estructura y
+datos** (ver «Fases»). La escena B (barco) pasa a la Fase 6, la del agua.*
 
-- **Escena C de la prueba inicial, hecha (2026-11-07).** Rama `feature/prueba-inicial`, sin commit todavía.
+- **Fases y estructura decididas por Limbers (2026-11-07).**
+  - Las fases se rehacen para que **cada una termine con Stonehill jugable y mejor que antes**. Ver «Fases».
+  - Estructura: la lógica pura va a un módulo de Gradle propio, `core`, que no ve Minecraft; los mapas, a archivos
+    JSON; las unidades, a una ficha en Kotlin. Ver [ARQUITECTURA.md](ARQUITECTURA.md), «Estructura del código».
+  - **De Bedrock se porta solo lo que haga falta, cuando haga falta.** Mucha de su lógica tapaba carencias de
+    Bedrock. Antes de portar un módulo se prueba sin él en Java; si el problema no aparece, no se porta. Comprobado
+    qué se puede reusar: ver [PORTAR-DESDE-BEDROCK.md](PORTAR-DESDE-BEDROCK.md), «Qué se puede reusar
+    (comprobado)».
+
+- **Escena C de la prueba inicial, hecha (2026-11-07).** Commits `eb2872d` (llano) y `fdddc34` (terreno real).
   - **Lógica pura con pruebas:** `logic/flow/FlowField.kt` (campo de flujo: Dijkstra al revés desde la meta, andar,
     subir un escalón, caer hasta 3; 7 pruebas) y `logic/flow/SpatialGrid.kt` (rejilla de 8 bloques para el enemigo
     más cercano; 5 pruebas).
@@ -47,6 +57,14 @@ Limbers en un mapa real, el desglose de Spark y la escena B (barco).*
     | Llano, sin Lithium (Spark en plena pelea) | 20,0 | ~12 / 17 / 30 | — | — | — |
     | Terreno real, sin Lithium ([informe](https://spark.lucko.me/GmezQ3APPn)) | 20,0 | 23,3 / 37,6 / 102 | 25 % del tick | 28 % | 2,4 % |
     | Terreno real, con Lithium ([informe](https://spark.lucko.me/e3RQfad7dd)) | 20,0 | **14,4 / 24,2 / 71** | 13 % | 35 % | 3,1 % |
+    | Castillo de Stonehill, con Lithium ([informe](https://spark.lucko.me/qA4X1wCmwO)) | 20,0 | **14,3 / 24,0 / 180** | — | — | ~3 % (0,9 % del total con espera) |
+
+    - **Stonehill** (2026-11-07): `.mcworld` de Bedrock convertido con Chunker 1.21.0 (`--outputFormat JAVA_26_3`,
+      4 s) a `run/stonehill` (fuera del repo). Las coordenadas coinciden con las de Bedrock: puerta este en x -283,
+      z 206, suelo a 124. Batalla con `execute positioned -199 125 206 rotated 90 0 run bastion escena
+      batalla-terreno`: los defensores quedan dentro del castillo y los invasores en el valle del este. Campo de flujo
+      de 6756 casillas (caja 111x81x52) en 82 ms. En 60 s solo caen 12 unidades: el asalto avanza despacio.
+      Un pico suelto de 180 ms (origen por mirar); la media y el p95, iguales que en terreno normal.
 
     - Con Lithium el tick baja un 40 %. Ojo: en la primera medida el mundo era nuevo y aún generaba terreno; en la de
       Lithium ya estaba generado. Parte de la mejora puede venir de ahí.
@@ -56,10 +74,11 @@ Limbers en un mapa real, el desglose de Spark y la escena B (barco).*
     - La meta del campo de flujo era una fila; en terreno real cayó en la orilla de un lago y quedó aislada (32
       casillas). Ahora es toda la franja de los defensores. El agua sigue sin cruzarse (llegará con la escena B).
     - Lithium (servidor) y Sodium (cliente, beta para 26.3) van en el entorno de desarrollo (`localRuntime`).
-  - **Falta:** los FPS de Limbers con Sodium; el mapa real del castillo (convertir Stonehill u Old Fallen Castle con
-    Chunker: hace falta que Limbers descargue el `.mcworld` de mcpedl); el desglose por método de Spark (`/spark profiler` sube el informe a
-    spark.lucko.me: preguntar a Limbers antes de usarlo, o guardarlo en archivo); medir con Lithium; y una batalla más
-    larga o con más unidades para ver dónde está el techo.
+  - **FPS de Limbers con Sodium** (2026-11-07, batalla de 400 en Stonehill, mirando en vivo): estables entre 150 y
+    200 o más en plena pelea, sin tirones por debajo de 60. Sin Sodium, en el llano, eran 80-90.
+  - **Queda para las fases siguientes:** el origen del pico de 180 ms en Stonehill; la batalla propia del castillo
+    (meta en la puerta, defensores en las murallas; Fase 3); y una batalla más larga o con más unidades para ver
+    dónde está el techo (Fase 7).
   - GameTest nueva `campoDeFlujo`: 10 invasores cruzan la puerta siguiendo el campo en ~4,7 s, 5 de 5.
 
 - **Escena A de la prueba inicial, hecha (2026-11-07).** Rama `feature/prueba-inicial`.
@@ -134,14 +153,7 @@ Limbers en un mapa real, el desglose de Spark y la escena B (barco).*
   - Tiene **pendiente el commit de su Fase 3** (v0.1.44-0.1.55) cuando Limbers dé el OK.
   - En su v0.1.55 `reselect_targets` vuelve a estar puesto, así que la batalla grande va lenta (2-4 ticks/s), pero
     todo lo demás funciona como antes.
-- **Siguiente paso:** la [prueba inicial](PRUEBA-INICIAL.md):
-  1. ~~Elegir y fijar versiones.~~ Hecho: 26.3.
-  2. ~~Crear el proyecto con la plantilla oficial de Fabric en Kotlin.~~ Hecho: `build`, `runServer`,
-     `runClient` y la GameTest vacía funcionan.
-  3. ~~Escena A: el invasor que coloca su escalera y pica con grieta, con sus GameTest.~~ Hecha; falta la opinión
-     de Limbers.
-  4. ~~Escena C: 400 unidades con campo de flujo, medidas con Spark.~~ Hecha: 20 ticks/s; faltan FPS y desglose.
-  5. Escena B: el barco, si da tiempo.
+- **Siguiente paso:** la Fase 2, estructura y datos (ver «Fases»).
 
 ## Versiones fijadas
 
@@ -158,59 +170,115 @@ Limbers en un mapa real, el desglose de Spark y la escena B (barco).*
 Para jugar en Prism con 26.3 (Modrinth, 2026-11-07): Sodium `mc26.3-0.9.3-beta.3` (beta), Lithium
 `mc26.3-0.26.3`, Spark 1.10.187, EntityCulling 1.11.3. La fuente de verdad es `gradle.properties`.
 
-## Fases de la migración
+## Fases
+
+Decididas por Limbers el 2026-11-07. Las de Bedrock siguieron el orden en que salían los problemas; aquí la lógica
+ya existe, así que se avanza por **rebanadas jugables**: cada fase termina con Stonehill jugable y mejor que antes,
+y Limbers lo prueba en su PC antes de cerrarla.
+
+En todas las fases:
+
+- Cada comportamiento nuevo lleva su GameTest, y cada cambio que pueda pesar se mide antes y después.
+- **Antes de portar un módulo de Bedrock, se prueba sin él.** Se porta solo si el problema aparece en Java, y solo
+  la parte que haga falta. La columna «De Bedrock» dice qué se mira, no qué se copia.
+- Tras cada cambio, el juego de Limbers se cierra y se vuelve a abrir con la versión nueva para que lo vea.
+
+| Fase | Qué | De Bedrock |
+|---|---|---|
+| 0 ✅ | Planificación | — |
+| 1 ✅ | Prueba inicial: escenas A y C | `routeLogic`, `ladderLogic` |
+| **2** | **Estructura y datos** | `catalog`, `maps/*` |
+| 3 | Primera partida jugable en Stonehill | `siegeState`, `wavePlan` |
+| 4 | Muros y asedio | `wallLogic` |
+| 5 | Combate orgánico | `squad`, `morale`, `stance`, `post`, `rescue`, `intruder` |
+| 6 | Agua | — (los barcos de Bedrock no sirven) |
+| 7 | Guerra progresiva y gran escala | `hunt` (parte) |
+| 8 | Unidades nuevas | — |
 
 ### Fase 0: planificación (hecha, 2026-11-07)
 
 - [x] Decidir la migración y el stack.
 - [x] Guía completa para retomar: este documento y los demás de `docs/`.
 
-### Fase 1: prueba inicial
+### Fase 1: prueba inicial (hecha, 2026-11-07)
 
 Criterios y escenas en [PRUEBA-INICIAL.md](PRUEBA-INICIAL.md).
 
-- [x] Versiones elegidas y fijadas (26.3, 2026-11-07).
-- [x] Proyecto creado; `build`, `runClient`, `runServer` y una GameTest vacía funcionan (2026-11-07).
-- [x] Escena A: escalera colocada por el invasor, picar con grieta, escalera derribada. GameTest 5 de 5
-      (2026-11-07). Falta que Limbers diga si se siente real.
-- [x] Escena C: 400 unidades, campo de flujo, rejilla; medido (ticks/s y ms por tick, 2026-11-07). Faltan el
-      desglose de Spark y los FPS en el PC de Limbers.
-- [ ] Escena B: cruce en barco.
-- [ ] Limbers lo ve en su PC y decide si se sigue.
+- [x] Versiones elegidas y fijadas (26.3).
+- [x] Proyecto creado; `build`, `runClient`, `runServer` y GameTest funcionan.
+- [x] Escena A: escalera colocada por el invasor, picar con grieta, escalera derribada. GameTest 5 de 5. Limbers la
+      vio y le convence.
+- [x] Escena C: 400 unidades con campo de flujo y rejilla, a 20 ticks/s en llano, terreno real y Stonehill.
+      150-200 FPS en el PC de Limbers con Sodium.
+- [x] Limbers lo ve en su PC y decide seguir en Java.
+- Escena B (barco): pasa a la Fase 6.
 
-### Fase 2: base del juego
+### Fase 2: estructura y datos
 
-Lo que en Bedrock era la «Base del juego» y la Fase 1, ya con acciones reales.
+El esqueleto sobre el que crece todo. Casi sin juego nuevo, pero al cerrarla la escena A, la batalla de 400 y sus
+GameTest funcionan igual que antes, sobre la estructura nueva.
 
-- [ ] Convertir Stonehill con Chunker y comprobar las coordenadas.
-- [ ] Portar las fichas de unidad (7 unidades), con skins y variación ±10 %.
-- [ ] Portar `wavePlan` y el director de partida: cuenta atrás, oleadas, descanso, vidas, victoria y derrota.
-- [ ] Portar `wallLogic`: muro de la puerta, brecha.
-- [ ] Buscador de rutas con acciones (a partir de `routeLogic`) y campos de flujo para el grueso del ejército.
-- [ ] Órdenes al ejército (retirada a puestos, salida, defender) con `postLogic`.
-- [ ] Magos y arqueros: proyectiles, línea de visión y puestos en alto.
-- [ ] Banco de la batalla grande (equivalente a `cost.mjs`).
+- [ ] Separar la lógica pura en el módulo `core` (Kotlin sin Minecraft, pruebas JUnit) y el mod en `mod`. Mover
+      rutas, campo de flujo y rejilla a `core`. Ver [ARQUITECTURA.md](ARQUITECTURA.md), «Estructura del código».
+- [ ] Reordenar los paquetes del mod: `unit`, `director`, `game`, `world`, `map`, `debug`.
+- [ ] Ficha de unidad en Kotlin con las 7 unidades de Bedrock (vida, golpe, velocidad, arma, skins, bando y rol),
+      con la variación de ±10 %. Al principio solo nacen las que ya tienen comportamiento (soldados).
+- [ ] Mapas en JSON (`data/bastion/maps/*.json`): formato, lector y comprobaciones (lo que hacía
+      `maps/validate.ts`). Stonehill primero, con sus datos de Bedrock.
+- [ ] Convertir Old Fallen Castle, The Combat Castle e Ice Castle con Chunker y comprobar sus coordenadas.
+- [ ] Copia limpia de cada mundo convertido, para reponerlo entre pruebas.
+- [ ] Herramienta para ver rutas y campos de flujo en el juego (depuración).
 
-### Fase 3: combate orgánico
+### Fase 3: primera partida jugable en Stonehill
 
-Lo que en Bedrock era su Fase 3, que allí quedó sin cerrar.
+- [ ] Partida: cuenta atrás, oleadas, descanso, vidas compartidas, victoria y derrota (`siegeState`,
+      `wavePlan`).
+- [ ] Oleadas desde los puntos de aparición del mapa, con las cifras de Limbers. Refuerzos aliados.
+- [ ] Batalla propia del castillo: meta en la puerta, defensores en las murallas y en la puerta.
+- [ ] Invasores que siguen el campo de flujo hasta la puerta y pican o ponen escaleras cuando hace falta.
+- [ ] Arqueros de los dos bandos: arco, línea de visión y puestos en alto.
+- [ ] El pico de 180 ms visto en Stonehill: de dónde sale.
 
-- [ ] Grupos con objetivos repartidos y reserva (`squadLogic`).
+### Fase 4: muros y asedio
+
+- [ ] Muro de la puerta, brecha y zona donde se puede picar (`wallLogic`).
+- [ ] Magos invasores contra el muro; pirómano aliado.
+- [ ] Escaleras dentro de la batalla grande: el campo de flujo cuenta picar y escalar como costes.
+- [ ] Recalcular el campo por zonas cuando se rompe o se pone un bloque.
+- [ ] Reparar el muro en el descanso.
+
+### Fase 5: combate orgánico
+
+Lo que en Bedrock era su Fase 3, que allí quedó sin cerrar. Cada punto, solo si en Java hace falta.
+
+- [ ] Grupos con objetivos repartidos y reserva (`squadLogic`), contra la «bolita».
 - [ ] Moral: repliegue al patio y a la torre (`moraleLogic`).
-- [ ] Postura defensiva (`stanceLogic`).
+- [ ] Postura y puestos de defensa (`stanceLogic`, `postLogic`).
+- [ ] Órdenes al ejército con objetos en la mano: retirada, salida y defender.
 - [ ] Cuerno de rescate y escolta (`rescueLogic`).
-- [ ] Animaciones propias con GeckoLib: golpe, cargar escalera, remar.
-- [ ] Barcos y balsas de varias plazas para cruzar el agua.
+- [ ] Monstruos del juego dentro del castillo (`intruderLogic`).
 
-### Fase 4 en adelante: lo que Bedrock no dejaba
+### Fase 6: agua
+
+- [ ] Escena B: un invasor que embarca, rema y desembarca él mismo.
+- [ ] Navegación anfibia y barcos de varias plazas.
+- [ ] Old Fallen Castle con su lago: unos cruzan el agua y otros van por tierra.
+
+### Fase 7: guerra progresiva y gran escala
 
 - [ ] «Lugares»: varios puntos que defender por mapa, con retirada entre ellos (pedido por Limbers en Bedrock).
-- [ ] Tope de unidades en el campo y reservas; ritmo por etapas.
-- [ ] Arietes y torres de asedio.
+- [ ] Tope de unidades en el campo y reservas; presupuesto por oleada; ritmo por etapas.
+- [ ] Nivel de detalle: las unidades lejanas piensan menos.
+- [ ] Batallas más largas y con más unidades, para ver el techo. Varios frentes (Ice Castle).
+
+### Fase 8: unidades nuevas
+
 - [ ] Unidades aéreas y acuáticas.
+- [ ] Unidad que trepa muros, como las arañas.
+- [ ] Arietes y torres de asedio.
 - [ ] Dragones (entidad de varias piezas).
-- [ ] Varias capas de muro, reparar en el descanso, más frentes (Ice Castle).
 - [ ] Civiles que huyen.
+- [ ] Modelos y animaciones propias con GeckoLib (golpe, cargar escalera, remar).
 - [ ] Arte definitivo y permiso de las skins antes de publicar.
 
 ## Decisiones tomadas
@@ -226,6 +294,13 @@ Lo que en Bedrock era su Fase 3, que allí quedó sin cerrar.
   (`build.gradle.kts`).
 - **Las reglas de juego de Bedrock se mantienen** salvo que Limbers diga otra cosa: ver
   [PORTAR-DESDE-BEDROCK.md](PORTAR-DESDE-BEDROCK.md).
+- **Seguir en Java (Limbers, 2026-11-07)**, tras ver la prueba inicial: «mucho más realista ... con un esfuerzo
+  mucho menor».
+- **Fases por rebanadas jugables (Limbers, 2026-11-07):** ver «Fases».
+- **Portar de Bedrock solo lo que haga falta (Limbers, 2026-11-07):** primero se prueba sin el módulo; mucha de
+  esa lógica parcheaba carencias de Bedrock.
+- **Estructura (Limbers, 2026-11-07):** módulo `core` sin Minecraft, mapas en JSON y unidades en una ficha de
+  Kotlin. Ver [ARQUITECTURA.md](ARQUITECTURA.md).
 
 ## Decisiones abiertas
 

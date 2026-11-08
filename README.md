@@ -4,9 +4,12 @@ Juego de asedios para Minecraft Java Edition: defiendes un castillo con tus trop
 llegan, pican los muros, ponen escaleras, cruzan el agua y pelean en grupo. Es la continuación de **Bastion para
 Bedrock** (`../Bastion`), que se migra a Java para poder hacerlo **realista**.
 
-> **Estado (2026-11-07): fase 1, prueba inicial.** El proyecto (Minecraft 26.3, Fabric, Kotlin) compila y pasa
-> una GameTest vacía; todavía no hay IA. Lo siguiente, la escena A de
-> [docs/PRUEBA-INICIAL.md](docs/PRUEBA-INICIAL.md).
+> **Estado (2026-11-07): prueba inicial superada; empieza la Fase 2, estructura y datos.**
+>
+> - Los invasores pican y ponen sus escaleras ellos mismos.
+> - Una batalla de 200 contra 200 va a 20 ticks/s, también en el castillo de Stonehill convertido de Bedrock.
+>
+> Fases y lo que sigue: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Empieza aquí
 
@@ -15,7 +18,7 @@ Si retomas el proyecto en una sesión nueva, lee en este orden:
 1. [docs/ROADMAP.md](docs/ROADMAP.md): **dónde nos quedamos**, qué sigue y las fases de la migración.
 2. [docs/POR-QUE-JAVA.md](docs/POR-QUE-JAVA.md): por qué se deja Bedrock, qué se gana y qué se pierde. Explica el
    espíritu del proyecto: realismo sin parches.
-3. [docs/PRUEBA-INICIAL.md](docs/PRUEBA-INICIAL.md): la primera tarea, con sus criterios de éxito.
+3. [docs/PRUEBA-INICIAL.md](docs/PRUEBA-INICIAL.md): la primera tarea (hecha), con sus criterios de éxito.
 4. [docs/STACK.md](docs/STACK.md): herramientas, versiones, instalación en Arch Linux y flujo de trabajo.
 5. [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md): cómo se piensa construir la IA (rutas con acciones, campos de
    flujo, director, grupos) para que escale a cientos de unidades.
@@ -61,7 +64,8 @@ plataforma de juego.
 - **Carpeta:** `../Bastion` (rama `feature/old-fallen-castle`). Queda **como referencia** y no se sigue
   desarrollando salvo que Limbers lo pida. Su última versión es la 0.1.55.
 - **Lo que se lleva:**
-  - su lógica pura y sus pruebas, unas 3.000 y 2.600 líneas de TypeScript, que se traducen a Kotlin;
+  - su lógica pura y sus pruebas, unas 3.000 y 2.600 líneas de TypeScript (comprobado). Se traducen a Kotlin
+    **solo cuando hacen falta**: antes se prueba en Java sin ellas, porque mucha parcheaba carencias de Bedrock;
   - las fichas de unidad, los mapas, las skins y los mundos (se convierten con Chunker);
   - todo lo aprendido, en `../Bastion/docs/IA.md` y `../Bastion/docs/ROADMAP.md`.
 - **Lo que no se lleva:** los parches contra la navegación de Bedrock. Ver

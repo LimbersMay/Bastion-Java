@@ -10,11 +10,36 @@ qué se aprovecha, qué no y qué reglas de juego ya están decididas. Las fuent
   que pedir permiso a los autores o cambiarlas.
 - `../Bastion/tools/lab/README.md`: el laboratorio, cuyas pruebas pasan aquí a ser GameTest.
 
+## Regla: probar antes de portar (Limbers, 2026-11-07)
+
+Mucha de la lógica de Bedrock se escribió para tapar carencias de Bedrock (su navegación, `reselect_targets`, el
+agua). Por eso **nada se porta por adelantado**:
+
+1. Cada módulo se mira en la fase que lo necesita (ver «Fases» en [ROADMAP.md](ROADMAP.md)).
+2. Primero se prueba en Java **sin él**, con una GameTest o una escena que reproduzca el problema que resolvía.
+3. Si el problema no aparece, no se porta; se apunta en el roadmap que no hizo falta.
+4. Si aparece, se porta **solo la parte necesaria**, con sus pruebas traducidas a JUnit.
+
+## Qué se puede reusar (comprobado, 2026-11-07)
+
+Revisado archivo por archivo en `../Bastion` (v0.1.55): son puros los que no importan `@minecraft`.
+
+| Qué | Líneas | ¿Se reusa? |
+|---|---|---|
+| Lógica pura (`systems/*Logic.ts`, `wavePlan.ts`, `game/siegeState.ts`, `casualties.ts`) | ~2.100 | Sí, según la regla de arriba |
+| Datos de mapas (`maps/*.ts`, 4 mapas) y su validador (`maps/validate.ts`) | ~870 | Sí. Las coordenadas de Stonehill coinciden tras Chunker |
+| Fichas de unidad (`units/catalog.ts`), `constants.ts`, `strings.ts` | ~430 | Sí (fichas y textos; de las constantes, las que sigan teniendo sentido) |
+| Pruebas (`tests/*.test.ts`) | 2.597 | Sí, junto con el módulo que prueban |
+| Pegamento con el juego (`siegeManager`, `hunt`, `rescue`, `unreachable`...) | ~4.800 | No. Solo para leer qué hace cada sistema y en qué orden |
+
+Ya portado en la Fase 1: `routeLogic` (`RoutePlanner`, con sus 25 pruebas) y las reglas de `ladderLogic`
+(`holdsLadder`, dentro del buscador). `digLogic` lo sustituyen los tiempos de picar del juego (`Digging`).
+
 ## Lógica pura: se traduce a Kotlin con sus pruebas
 
-Son módulos sin dependencias del juego (`scripts/systems/*Logic.ts`), con pruebas vitest en `tests/`. Traducirlos
-casi línea a línea a Kotlin, junto con sus pruebas a JUnit, es lo más seguro: las pruebas dicen si la traducción es
-correcta.
+Son módulos sin dependencias del juego (`scripts/systems/*Logic.ts`), con pruebas vitest en `tests/`. Cuando la
+regla de arriba dice que hace falta uno, traducirlo casi línea a línea a Kotlin (al módulo `core`), junto con sus
+pruebas a JUnit, es lo más seguro: las pruebas dicen si la traducción es correcta.
 
 | Módulo (líneas) | Qué hace | En Java |
 |---|---|---|
